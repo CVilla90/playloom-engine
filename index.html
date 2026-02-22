@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playloom Engine - Embervault</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: radial-gradient(circle at top, #1f1f2b 0%, #120d0d 55%, #08070a 100%);
+        color: #f6f2df;
+        font-family: "Trebuchet MS", Verdana, sans-serif;
+        height: 100%;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #app {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+
+      canvas {
+        border: 2px solid #6f5d43;
+        box-shadow: 0 12px 38px rgba(0, 0, 0, 0.45);
+        max-width: 100%;
+        height: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/games/embervault/src/main.ts"></script>
+  </body>
+</html>

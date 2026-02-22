@@ -1,0 +1,96 @@
+{
+  "gameId": "embervault",
+  "assets": [
+    {
+      "id": "icon_scrap",
+      "kind": "image",
+      "path": "icons/scrap.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/generate-svg-assets.mjs"
+    },
+    {
+      "id": "icon_stone",
+      "kind": "image",
+      "path": "icons/stone.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/generate-svg-assets.mjs"
+    },
+    {
+      "id": "icon_metal",
+      "kind": "image",
+      "path": "icons/metal.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/generate-svg-assets.mjs"
+    },
+    {
+      "id": "icon_wood",
+      "kind": "image",
+      "path": "icons/wood.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/generate-svg-assets.mjs"
+    },
+    {
+      "id": "character_human",
+      "kind": "image",
+      "path": "characters/human.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/generate-svg-assets.mjs"
+    },
+    {
+      "id": "character_robot",
+      "kind": "image",
+      "path": "characters/robot.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/generate-svg-assets.mjs"
+    },
+    {
+      "id": "character_animal",
+      "kind": "image",
+      "path": "characters/animal.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/generate-svg-assets.mjs"
+    },
+    {
+      "id": "ui_panel",
+      "kind": "image",
+      "path": "ui/panel.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/generate-svg-assets.mjs"
+    },
+    {
+      "id": "phase1-core",
+      "kind": "image",
+      "path": "generated/icons/phase1-core.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#svg"
+    },
+    {
+      "id": "phase1-scout",
+      "kind": "image",
+      "path": "generated/sprites/phase1-scout.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sprite"
+    },
+    {
+      "id": "phase1-scout-sprite-meta",
+      "kind": "data",
+      "path": "generated/sprites/phase1-scout.sprite.json",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sprite-meta"
+    },
+    {
+      "id": "phase1-hit",
+      "kind": "audio",
+      "path": "generated/audio/phase1-hit.wav",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sfx-hit"
+    },
+    {
+      "id": "phase1-ambient",
+      "kind": "audio",
+      "path": "generated/audio/phase1-ambient.wav",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#music-ambient"
+    }
+  ]
+}

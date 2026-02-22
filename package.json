@@ -1,0 +1,42 @@
+{
+  "name": "playloom-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "games/*"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "vite --mode phase4",
+    "dev:phase1": "vite --mode phase1",
+    "dev:phase2": "vite --mode phase2",
+    "dev:phase3": "vite --mode phase3",
+    "dev:phase4": "vite --mode phase4",
+    "build": "vite build --mode phase4",
+    "build:phase1": "vite build --mode phase1",
+    "build:phase2": "vite build --mode phase2",
+    "build:phase3": "vite build --mode phase3",
+    "build:phase4": "vite build --mode phase4",
+    "preview": "vite preview",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "assets:generate": "node packages/engine-assets/tools/generate-svg-assets.mjs",
+    "asset:gen": "node packages/engine-assets/tools/asset-lab.mjs",
+    "cli": "node packages/cli/src/playloom.mjs",
+    "new-game": "node packages/cli/src/playloom.mjs new-game",
+    "validate:manifests": "node tools/validate-manifests.mjs",
+    "validate:boundaries": "node tools/check-boundaries.mjs",
+    "validate": "npm run validate:manifests && npm run validate:boundaries",
+    "smoke": "node tools/smoke-check.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0",
+    "vitest": "^2.1.8"
+  }
+}

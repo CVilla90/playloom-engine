@@ -1,0 +1,8 @@
+{
+  "id": "phase1-scout",
+  "image": "generated/sprites/phase1-scout.svg",
+  "frameWidth": 48,
+  "frameHeight": 48,
+  "frameCount": 6,
+  "fps": 10
+}

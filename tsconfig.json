@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@playloom/engine-core": ["packages/engine-core/src/index.ts"],
+      "@playloom/engine-input": ["packages/engine-input/src/index.ts"],
+      "@playloom/engine-renderer-canvas": ["packages/engine-renderer-canvas/src/index.ts"],
+      "@playloom/engine-audio": ["packages/engine-audio/src/index.ts"],
+      "@playloom/engine-assets": ["packages/engine-assets/src/index.ts"],
+      "@playloom/engine-core/*": ["packages/engine-core/src/*"],
+      "@playloom/engine-input/*": ["packages/engine-input/src/*"],
+      "@playloom/engine-renderer-canvas/*": ["packages/engine-renderer-canvas/src/*"],
+      "@playloom/engine-audio/*": ["packages/engine-audio/src/*"],
+      "@playloom/engine-assets/*": ["packages/engine-assets/src/*"]
+    }
+  },
+  "include": ["packages/**/*.ts", "games/**/*.ts", "games/**/*.d.ts"]
+}
