@@ -1,0 +1,16 @@
+{
+  "id": "strata-machina",
+  "name": "Strata Machina",
+  "entry": "src/main.ts",
+  "render": {
+    "width": 960,
+    "height": 540,
+    "targetFps": 60
+  },
+  "features": ["stage1", "ambient-movement", "vertical-prototype"],
+  "assetsManifest": "assets/asset.manifest.json",
+  "save": {
+    "key": "strata-machina.save.v1",
+    "version": 1
+  }
+}

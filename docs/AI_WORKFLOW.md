@@ -4,6 +4,10 @@
 Enable an AI agent to create a new game with minimal manual steps while preserving engine boundaries.
 
 ## Agent Protocol
+0. Session startup read order:
+   - `AGENTS.md`
+   - `docs/ENGINE_APIS.md`
+   - `games/<game-id>/docs/README.md` (after game selection)
 1. Scaffold new game:
    - `npm run new-game -- <game-id>`
    - Optional immediate run target: `npm run new-game -- <game-id> --set-default`
@@ -27,6 +31,14 @@ Enable an AI agent to create a new game with minimal manual steps while preservi
 8. Run full smoke checks:
    - `npm run smoke`
 9. If missing engine capability is found, propose an engine extension PR before game-side workaround.
+10. For movement-heavy prototypes, prefer reusable engine modules before custom scene code:
+   - `ZoneMap` + `PlatformerController` (`@playloom/engine-core`)
+   - `ActionMap` (`@playloom/engine-input`)
+   - `AudioMixer` (`@playloom/engine-audio`)
+   - blockout helpers (`@playloom/engine-renderer-canvas`)
+11. For character customization prototypes, prefer reusable engine modules:
+   - `createCharacterLabActionBindings` (`@playloom/engine-input`)
+   - `composeTintedSpriteFrame` (`@playloom/engine-renderer-canvas`)
 
 ## Engine Extension Rule
 When adding engine functionality, agent must update:

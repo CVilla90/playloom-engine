@@ -73,3 +73,28 @@
 6. Extended quality pipeline:
    - `npm run test`
    - `npm run smoke` now includes tests.
+
+## 2026-02-22 (Reusable gameplay primitives for AI-first prototyping)
+1. Added reusable motion + zone systems in `@playloom/engine-core`:
+   - `ZoneMap` for typed rectangular gameplay zones
+   - `PlatformerController` for grounded/airborne/climbing locomotion transitions
+2. Added reusable input action mapping in `@playloom/engine-input`:
+   - `ActionMap`
+   - `createPlatformerActionBindings`
+3. Added reusable bus-based audio control in `@playloom/engine-audio`:
+   - `AudioMixer` (master/music/sfx volume + mute + one-shot helper)
+4. Added reusable blockout and debug visuals in `@playloom/engine-renderer-canvas`:
+   - industrial floor/ceiling/stair primitives
+   - zone overlay helper
+5. Refactored `games/strata-machina` Stage 1 to consume new engine APIs instead of game-local control logic.
+6. Added unit tests for all new modules (core/input/audio/renderer).
+
+## 2026-02-22 (Character lab promoted to engine-level reusable APIs)
+1. Added character-lab action bindings in `@playloom/engine-input`:
+   - `createCharacterLabActionBindings()`
+2. Added reusable runtime sprite recolor helper in `@playloom/engine-renderer-canvas`:
+   - `composeTintedSpriteFrame(context, options)`
+3. Refactored `games/strata-machina` to consume engine APIs for:
+   - character slot selection keybinds
+   - head/chest/legs tint composition
+4. Added tests for the new input and renderer helpers.

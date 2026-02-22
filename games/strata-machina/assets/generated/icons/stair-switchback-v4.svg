@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 164">
+  <defs>
+    <linearGradient id="towerBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1c2737"/>
+      <stop offset="100%" stop-color="#111926"/>
+    </linearGradient>
+    <linearGradient id="stringer" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#51627c"/>
+      <stop offset="100%" stop-color="#2a3648"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="6" y="4" width="138" height="156" fill="url(#towerBg)" stroke="#465a74" stroke-width="2"/>
+  <rect x="10" y="10" width="8" height="144" fill="#2f3f55"/>
+  <rect x="132" y="10" width="8" height="144" fill="#2f3f55"/>
+  <rect x="14" y="12" width="2" height="140" fill="#5ad6ff" fill-opacity="0.5"/>
+  <rect x="134" y="12" width="2" height="140" fill="#5ad6ff" fill-opacity="0.5"/>
+
+  <rect x="18" y="132" width="114" height="10" fill="#243244" stroke="#4b607c" stroke-width="1"/>
+  <rect x="20" y="88" width="96" height="10" fill="#243244" stroke="#4b607c" stroke-width="1"/>
+  <rect x="34" y="44" width="98" height="10" fill="#243244" stroke="#4b607c" stroke-width="1"/>
+
+  <g fill="#2a374a" stroke="#3f5269" stroke-width="1">
+    <rect x="100" y="124" width="22" height="6"/><rect x="92" y="120" width="22" height="6"/>
+    <rect x="84" y="116" width="22" height="6"/><rect x="76" y="112" width="22" height="6"/>
+    <rect x="68" y="108" width="22" height="6"/><rect x="60" y="104" width="22" height="6"/>
+    <rect x="52" y="100" width="22" height="6"/><rect x="44" y="96" width="22" height="6"/>
+    <rect x="36" y="92" width="22" height="6"/>
+
+    <rect x="34" y="84" width="22" height="6"/><rect x="42" y="80" width="22" height="6"/>
+    <rect x="50" y="76" width="22" height="6"/><rect x="58" y="72" width="22" height="6"/>
+    <rect x="66" y="68" width="22" height="6"/><rect x="74" y="64" width="22" height="6"/>
+    <rect x="82" y="60" width="22" height="6"/><rect x="90" y="56" width="22" height="6"/>
+    <rect x="98" y="52" width="22" height="6"/><rect x="106" y="48" width="22" height="6"/>
+  </g>
+
+  <g fill="#f4a340">
+    <rect x="100" y="124" width="22" height="2"/><rect x="92" y="120" width="22" height="2"/>
+    <rect x="84" y="116" width="22" height="2"/><rect x="76" y="112" width="22" height="2"/>
+    <rect x="68" y="108" width="22" height="2"/><rect x="60" y="104" width="22" height="2"/>
+    <rect x="52" y="100" width="22" height="2"/><rect x="44" y="96" width="22" height="2"/>
+    <rect x="36" y="92" width="22" height="2"/>
+
+    <rect x="34" y="84" width="22" height="2"/><rect x="42" y="80" width="22" height="2"/>
+    <rect x="50" y="76" width="22" height="2"/><rect x="58" y="72" width="22" height="2"/>
+    <rect x="66" y="68" width="22" height="2"/><rect x="74" y="64" width="22" height="2"/>
+    <rect x="82" y="60" width="22" height="2"/><rect x="90" y="56" width="22" height="2"/>
+    <rect x="98" y="52" width="22" height="2"/><rect x="106" y="48" width="22" height="2"/>
+  </g>
+
+  <g stroke="url(#stringer)" stroke-width="3" fill="none">
+    <path d="M112 126 L44 92"/>
+    <path d="M40 84 L112 48"/>
+  </g>
+
+  <g stroke="#6f829e" stroke-width="2" fill="none">
+    <path d="M118 118 L54 86"/>
+    <path d="M32 86 L104 50"/>
+  </g>
+
+  <g stroke="#304156" stroke-width="1">
+    <line x1="30" y1="132" x2="30" y2="142"/>
+    <line x1="48" y1="132" x2="48" y2="142"/>
+    <line x1="66" y1="132" x2="66" y2="142"/>
+    <line x1="84" y1="132" x2="84" y2="142"/>
+    <line x1="102" y1="132" x2="102" y2="142"/>
+    <line x1="120" y1="132" x2="120" y2="142"/>
+  </g>
+</svg>

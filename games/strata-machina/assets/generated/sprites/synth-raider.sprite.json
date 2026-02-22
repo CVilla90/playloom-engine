@@ -1,0 +1,8 @@
+{
+  "id": "synth-raider",
+  "image": "generated/sprites/synth-raider.svg",
+  "frameWidth": 48,
+  "frameHeight": 48,
+  "frameCount": 6,
+  "fps": 8
+}

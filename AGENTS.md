@@ -5,6 +5,11 @@ This file defines mandatory behavior for AI agents working in this repository.
 ## Mission
 Build and maintain 2D single-player web games using Playloom Alpha 1.0.
 
+## Session Startup (Required)
+1. Read this file (`AGENTS.md`) first.
+2. Read `docs/ENGINE_APIS.md` for current reusable engine capabilities.
+3. Once the target game is known, read `games/<game-id>/docs/README.md`.
+
 ## Non-Negotiable Workflow
 1. Create new games only under `games/<game-id>`.
 2. Scaffold first:

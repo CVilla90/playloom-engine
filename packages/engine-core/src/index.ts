@@ -4,3 +4,5 @@ export * from "./ecs/EntityWorld";
 export * from "./math/collision";
 export * from "./math/rng";
 export * from "./persistence/LocalJsonStore";
+export * from "./world/ZoneMap";
+export * from "./motion/PlatformerController";

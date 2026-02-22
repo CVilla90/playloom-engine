@@ -1,0 +1,8 @@
+{
+  "id": "chrome-bot",
+  "image": "generated/sprites/chrome-bot.svg",
+  "frameWidth": 48,
+  "frameHeight": 48,
+  "frameCount": 6,
+  "fps": 8
+}

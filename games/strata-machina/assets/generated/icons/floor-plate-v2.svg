@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 64">
+  <defs>
+    <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a3646"/>
+      <stop offset="45%" stop-color="#1d2735"/>
+      <stop offset="100%" stop-color="#121b28"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="64" fill="url(#metal)"/>
+  <rect x="0" y="0" width="256" height="4" fill="#6c7785"/>
+  <rect x="0" y="60" width="256" height="4" fill="#0d141f"/>
+
+  <rect x="8" y="14" width="54" height="34" fill="#1a232f" stroke="#394657" stroke-width="1"/>
+  <rect x="70" y="14" width="54" height="34" fill="#1a232f" stroke="#394657" stroke-width="1"/>
+  <rect x="132" y="14" width="54" height="34" fill="#1a232f" stroke="#394657" stroke-width="1"/>
+  <rect x="194" y="14" width="54" height="34" fill="#1a232f" stroke="#394657" stroke-width="1"/>
+
+  <g fill="#f4a340" fill-opacity="0.55">
+    <circle cx="14" cy="20" r="1.5"/>
+    <circle cx="56" cy="20" r="1.5"/>
+    <circle cx="14" cy="42" r="1.5"/>
+    <circle cx="56" cy="42" r="1.5"/>
+
+    <circle cx="76" cy="20" r="1.5"/>
+    <circle cx="118" cy="20" r="1.5"/>
+    <circle cx="76" cy="42" r="1.5"/>
+    <circle cx="118" cy="42" r="1.5"/>
+
+    <circle cx="138" cy="20" r="1.5"/>
+    <circle cx="180" cy="20" r="1.5"/>
+    <circle cx="138" cy="42" r="1.5"/>
+    <circle cx="180" cy="42" r="1.5"/>
+
+    <circle cx="200" cy="20" r="1.5"/>
+    <circle cx="242" cy="20" r="1.5"/>
+    <circle cx="200" cy="42" r="1.5"/>
+    <circle cx="242" cy="42" r="1.5"/>
+  </g>
+</svg>

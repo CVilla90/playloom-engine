@@ -1,0 +1,201 @@
+{
+  "gameId": "strata-machina",
+  "assets": [
+    {
+      "id": "background-core",
+      "kind": "image",
+      "path": "generated/icons/background-core.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#svg"
+    },
+    {
+      "id": "wall-panel",
+      "kind": "image",
+      "path": "generated/icons/wall-panel.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#svg"
+    },
+    {
+      "id": "floor-plate",
+      "kind": "image",
+      "path": "generated/icons/floor-plate.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#svg"
+    },
+    {
+      "id": "ceiling-grid",
+      "kind": "image",
+      "path": "generated/icons/ceiling-grid.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#svg"
+    },
+    {
+      "id": "stair-frame",
+      "kind": "image",
+      "path": "generated/icons/stair-frame.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#svg"
+    },
+    {
+      "id": "background-core-v2",
+      "kind": "image",
+      "path": "generated/icons/background-core-v2.svg",
+      "license": "generated-in-repo",
+      "source": "games/strata-machina/assets/generated/icons/background-core-v2.svg#manual"
+    },
+    {
+      "id": "wall-panel-v2",
+      "kind": "image",
+      "path": "generated/icons/wall-panel-v2.svg",
+      "license": "generated-in-repo",
+      "source": "games/strata-machina/assets/generated/icons/wall-panel-v2.svg#manual"
+    },
+    {
+      "id": "floor-plate-v2",
+      "kind": "image",
+      "path": "generated/icons/floor-plate-v2.svg",
+      "license": "generated-in-repo",
+      "source": "games/strata-machina/assets/generated/icons/floor-plate-v2.svg#manual"
+    },
+    {
+      "id": "ceiling-grid-v2",
+      "kind": "image",
+      "path": "generated/icons/ceiling-grid-v2.svg",
+      "license": "generated-in-repo",
+      "source": "games/strata-machina/assets/generated/icons/ceiling-grid-v2.svg#manual"
+    },
+    {
+      "id": "stair-frame-v2",
+      "kind": "image",
+      "path": "generated/icons/stair-frame-v2.svg",
+      "license": "generated-in-repo",
+      "source": "games/strata-machina/assets/generated/icons/stair-frame-v2.svg#manual"
+    },
+    {
+      "id": "stair-frame-v3",
+      "kind": "image",
+      "path": "generated/icons/stair-frame-v3.svg",
+      "license": "generated-in-repo",
+      "source": "games/strata-machina/assets/generated/icons/stair-frame-v3.svg#manual"
+    },
+    {
+      "id": "stair-connector-v3",
+      "kind": "image",
+      "path": "generated/icons/stair-connector-v3.svg",
+      "license": "generated-in-repo",
+      "source": "games/strata-machina/assets/generated/icons/stair-connector-v3.svg#manual"
+    },
+    {
+      "id": "stair-switchback-v4",
+      "kind": "image",
+      "path": "generated/icons/stair-switchback-v4.svg",
+      "license": "generated-in-repo",
+      "source": "games/strata-machina/assets/generated/icons/stair-switchback-v4.svg#manual"
+    },
+    {
+      "id": "stair-connector-v4",
+      "kind": "image",
+      "path": "generated/icons/stair-connector-v4.svg",
+      "license": "generated-in-repo",
+      "source": "games/strata-machina/assets/generated/icons/stair-connector-v4.svg#manual"
+    },
+    {
+      "id": "stair-ladder-v5",
+      "kind": "image",
+      "path": "generated/icons/stair-ladder-v5.svg",
+      "license": "generated-in-repo",
+      "source": "games/strata-machina/assets/generated/icons/stair-ladder-v5.svg#manual"
+    },
+    {
+      "id": "stair-connector-v5",
+      "kind": "image",
+      "path": "generated/icons/stair-connector-v5.svg",
+      "license": "generated-in-repo",
+      "source": "games/strata-machina/assets/generated/icons/stair-connector-v5.svg#manual"
+    },
+    {
+      "id": "shaft-drift",
+      "kind": "audio",
+      "path": "generated/audio/shaft-drift.wav",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#music-ambient"
+    },
+    {
+      "id": "footstep-metal",
+      "kind": "audio",
+      "path": "generated/audio/footstep-metal.wav",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sfx-pickup"
+    },
+    {
+      "id": "jump-thruster",
+      "kind": "audio",
+      "path": "generated/audio/jump-thruster.wav",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sfx-jump"
+    },
+    {
+      "id": "landing-clang",
+      "kind": "audio",
+      "path": "generated/audio/landing-clang.wav",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sfx-hit"
+    },
+    {
+      "id": "chrome-bot",
+      "kind": "image",
+      "path": "generated/sprites/chrome-bot.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sprite"
+    },
+    {
+      "id": "chrome-bot-sprite-meta",
+      "kind": "data",
+      "path": "generated/sprites/chrome-bot.sprite.json",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sprite-meta"
+    },
+    {
+      "id": "neon-runner",
+      "kind": "image",
+      "path": "generated/sprites/neon-runner.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sprite"
+    },
+    {
+      "id": "neon-runner-sprite-meta",
+      "kind": "data",
+      "path": "generated/sprites/neon-runner.sprite.json",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sprite-meta"
+    },
+    {
+      "id": "alley-jackal",
+      "kind": "image",
+      "path": "generated/sprites/alley-jackal.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sprite"
+    },
+    {
+      "id": "alley-jackal-sprite-meta",
+      "kind": "data",
+      "path": "generated/sprites/alley-jackal.sprite.json",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sprite-meta"
+    },
+    {
+      "id": "synth-raider",
+      "kind": "image",
+      "path": "generated/sprites/synth-raider.svg",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sprite"
+    },
+    {
+      "id": "synth-raider-sprite-meta",
+      "kind": "data",
+      "path": "generated/sprites/synth-raider.sprite.json",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sprite-meta"
+    }
+  ]
+}
