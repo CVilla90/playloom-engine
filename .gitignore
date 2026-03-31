@@ -1,2 +1,4 @@
 node_modules
 dist
+external-assets/*
+!external-assets/README.md
