@@ -1,0 +1,47 @@
+{
+  "gameId": "backrooms-breaker-floor",
+  "assets": [
+    {
+      "id": "yellow-suit",
+      "kind": "image",
+      "path": "generated/sprites/yellow-suit.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/sprites/yellow-suit.svg#manual"
+    },
+    {
+      "id": "yellow-suit-sprite-meta",
+      "kind": "data",
+      "path": "generated/sprites/yellow-suit.sprite.json",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/sprites/yellow-suit.sprite.json#manual"
+    },
+    {
+      "id": "fluorescent-hum",
+      "kind": "audio",
+      "path": "generated/audio/fluorescent-hum.wav",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#music-ambient"
+    },
+    {
+      "id": "hazmat-step",
+      "kind": "audio",
+      "path": "generated/audio/hazmat-step.wav",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sfx-hit"
+    },
+    {
+      "id": "relay-pickup",
+      "kind": "audio",
+      "path": "generated/audio/relay-pickup.wav",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sfx-pickup"
+    },
+    {
+      "id": "breaker-toggle",
+      "kind": "audio",
+      "path": "generated/audio/breaker-toggle.wav",
+      "license": "generated-in-repo",
+      "source": "packages/engine-assets/tools/asset-lab.mjs#sfx-laser"
+    }
+  ]
+}

@@ -84,7 +84,8 @@ Reusable action mapping:
 1. `ActionMap`
 2. `createPlatformerActionBindings()`
 3. `createCharacterLabActionBindings()`
-4. `createActionMapForInputManager(input, bindings?)`
+4. `createMenuActionBindings()`
+5. `createActionMapForInputManager(input, bindings?)`
 
 Example:
 
@@ -101,6 +102,9 @@ const jumpPressed = actions.wasPressed("jump");
 
 const characterLab = createCharacterLabActionBindings();
 const chooseFirst = characterLab.character_select_1;
+
+const menu = createMenuActionBindings();
+const confirmPressed = new ActionMap(input, menu).wasPressed("menu_confirm");
 ```
 
 ## `@playloom/engine-audio`
@@ -129,4 +133,6 @@ Blockout + debug drawing helpers:
 2. `drawIndustrialCeilingSegment(renderer, x, y, width, height, style?)`
 3. `drawIndustrialStairFlight(renderer, x, y, width, height, direction, style?)`
 4. `drawZoneOverlay(renderer, zones)`
-5. `composeTintedSpriteFrame(context, options)` for layered runtime sprite recoloring
+5. `wrapTextLines(text, maxWidth, measureText)` for reusable text layout
+6. `drawTextBlock(renderer, text, x, y, maxWidth, lineHeight, options?)`
+7. `composeTintedSpriteFrame(context, options)` for layered runtime sprite recoloring

@@ -1,0 +1,16 @@
+{
+  "id": "quiet-collapse",
+  "name": "The Quiet Collapse",
+  "entry": "src/main.ts",
+  "render": {
+    "width": 1360,
+    "height": 768,
+    "targetFps": 60
+  },
+  "features": ["save", "audio", "narrative", "scan-console", "multiple-endings"],
+  "assetsManifest": "assets/asset.manifest.json",
+  "save": {
+    "key": "quiet-collapse.save.v1",
+    "version": 1
+  }
+}

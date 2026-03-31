@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playloom Engine - Backrooms: Breaker Floor</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(circle at top, rgba(220, 208, 140, 0.12), transparent 34%),
+          linear-gradient(180deg, #1d1a11 0%, #0d0c09 100%);
+        color: #efe3ad;
+        font-family: "Trebuchet MS", Verdana, sans-serif;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #app {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        padding: 18px;
+        box-sizing: border-box;
+      }
+
+      canvas {
+        max-width: min(100%, 1100px);
+        height: auto;
+        border: 2px solid #82713f;
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.65);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/games/backrooms-breaker-floor/src/main.ts"></script>
+  </body>
+</html>

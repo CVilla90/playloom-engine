@@ -60,6 +60,15 @@ export function createPlatformerActionBindings(): ActionBindings {
   };
 }
 
+export function createMenuActionBindings(): ActionBindings {
+  return {
+    menu_prev: ["a", "arrowleft", "w", "arrowup"],
+    menu_next: ["d", "arrowright", "s", "arrowdown"],
+    menu_confirm: ["enter", " "],
+    menu_back: ["escape", "backspace"]
+  };
+}
+
 export function createCharacterLabActionBindings(): ActionBindings {
   return {
     character_select_1: ["1"],

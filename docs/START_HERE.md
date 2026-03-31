@@ -1,5 +1,7 @@
 # Start Here
 
+`README.md` is now the single-file startup brief for this repository. If you only read one file before starting, read that one.
+
 ## Fast setup
 1. `npm install`
 2. `npm run dev`
@@ -19,6 +21,7 @@
 3. `npm run smoke`
 
 ## Read next
-1. `AGENTS.md`
-2. `docs/AI_WORKFLOW.md`
-3. `docs/ENGINE_APIS.md`
+1. `README.md`
+2. `AGENTS.md`
+3. `docs/AI_WORKFLOW.md`
+4. `docs/ENGINE_APIS.md`

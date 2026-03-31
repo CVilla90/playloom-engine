@@ -5,6 +5,7 @@ Enable an AI agent to create a new game with minimal manual steps while preservi
 
 ## Agent Protocol
 0. Session startup read order:
+   - `README.md` as the one-file startup brief
    - `AGENTS.md`
    - `docs/ENGINE_APIS.md`
    - `games/<game-id>/docs/README.md` (after game selection)

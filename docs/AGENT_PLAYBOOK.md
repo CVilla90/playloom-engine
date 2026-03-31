@@ -2,6 +2,7 @@
 
 ## Fast Path
 0. Session startup read order:
+   - `README.md` as the single-file startup brief
    - `AGENTS.md`
    - `docs/ENGINE_APIS.md`
    - `games/<game-id>/docs/README.md` (after game selection)

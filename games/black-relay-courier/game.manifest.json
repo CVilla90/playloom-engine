@@ -1,0 +1,16 @@
+{
+  "id": "black-relay-courier",
+  "name": "Black Relay Courier",
+  "entry": "src/main.ts",
+  "render": {
+    "width": 1280,
+    "height": 720,
+    "targetFps": 60
+  },
+  "features": ["prototype"],
+  "assetsManifest": "assets/asset.manifest.json",
+  "save": {
+    "key": "black-relay-courier.save.v1",
+    "version": 1
+  }
+}

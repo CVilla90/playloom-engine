@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ActionMap,
   createCharacterLabActionBindings,
+  createMenuActionBindings,
   createPlatformerActionBindings,
   type InputLike
 } from "./ActionMap";
@@ -58,5 +59,16 @@ describe("ActionMap", () => {
     expect(actions.wasPressed("character_select_3")).toBe(true);
     expect(actions.wasPressed("tint_head_prev")).toBe(true);
     expect(actions.wasPressed("character_select_2")).toBe(false);
+  });
+
+  it("provides default menu bindings", () => {
+    const input = new MockInput();
+    const actions = new ActionMap(input, createMenuActionBindings());
+    input.pressed.add("arrowright");
+    input.pressed.add("enter");
+
+    expect(actions.wasPressed("menu_next")).toBe(true);
+    expect(actions.wasPressed("menu_confirm")).toBe(true);
+    expect(actions.wasPressed("menu_back")).toBe(false);
   });
 });

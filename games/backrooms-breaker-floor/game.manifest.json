@@ -1,0 +1,16 @@
+{
+  "id": "backrooms-breaker-floor",
+  "name": "Backrooms: Breaker Floor",
+  "entry": "src/main.ts",
+  "render": {
+    "width": 960,
+    "height": 540,
+    "targetFps": 60
+  },
+  "features": ["prototype", "topdown-exploration", "touch-controls", "objective-loop", "atmospheric-horror"],
+  "assetsManifest": "assets/asset.manifest.json",
+  "save": {
+    "key": "backrooms-breaker-floor.save.v1",
+    "version": 1
+  }
+}
