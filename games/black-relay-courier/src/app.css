@@ -1,0 +1,142 @@
+#app {
+  box-sizing: border-box;
+  width: min(100%, 1380px);
+  margin: 0 auto;
+  padding: clamp(10px, 2vw, 18px);
+}
+
+.courier-app-shell {
+  width: min(100%, 1280px);
+  margin: 0 auto;
+  display: grid;
+  gap: 12px;
+}
+
+.courier-app-note {
+  display: none;
+  padding: 10px 14px;
+  border: 1px solid rgba(142, 223, 255, 0.24);
+  background: rgba(8, 12, 18, 0.72);
+  color: #d6e6f7;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.courier-app-stage {
+  overflow: hidden;
+  border: 2px solid #5a708d;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.52);
+  background: #040608;
+}
+
+.courier-app-stage canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+}
+
+.courier-touch-panel {
+  display: none;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(142, 223, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(8, 13, 20, 0.92), rgba(6, 10, 15, 0.96)),
+    radial-gradient(circle at top, rgba(142, 223, 255, 0.06), transparent 42%);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+}
+
+.courier-touch-panel.is-visible {
+  display: grid;
+}
+
+.courier-touch-panel__note {
+  color: #9fb4cb;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.courier-touch-panel__deck {
+  display: grid;
+  gap: 10px;
+}
+
+.courier-touch-panel__group {
+  display: grid;
+  gap: 8px;
+}
+
+.courier-touch-panel__group--utility {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.courier-touch-panel__group--primary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.courier-touch-button {
+  min-height: 52px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f6f2df;
+  font: 700 13px "Trebuchet MS", Verdana, sans-serif;
+  letter-spacing: 0.04em;
+  touch-action: none;
+}
+
+.courier-touch-button.is-wide {
+  grid-column: span 2;
+}
+
+.courier-touch-button[data-tone="cyan"] {
+  border-color: rgba(142, 223, 255, 0.28);
+  background: rgba(142, 223, 255, 0.12);
+}
+
+.courier-touch-button[data-tone="ember"] {
+  border-color: rgba(255, 182, 145, 0.28);
+  background: rgba(255, 182, 145, 0.1);
+}
+
+.courier-touch-button.is-active {
+  transform: translateY(1px);
+  filter: brightness(1.16);
+}
+
+@media (orientation: portrait) and (pointer: coarse) {
+  .courier-app-note {
+    display: block;
+  }
+}
+
+@media (max-width: 900px) {
+  #app {
+    padding: 10px;
+  }
+
+  .courier-app-shell {
+    gap: 10px;
+  }
+
+  .courier-touch-panel {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .courier-touch-panel__group--utility {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .courier-touch-button.is-wide {
+    grid-column: span 3;
+  }
+
+  .courier-touch-button {
+    min-height: 48px;
+    font-size: 12px;
+  }
+}

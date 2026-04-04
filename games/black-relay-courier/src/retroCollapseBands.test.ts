@@ -30,40 +30,40 @@ describe("retro collapse bands", () => {
     const band: RetroCollapseBandState = {
       id: "wake-collapse",
       label: "Wake Collapse",
-      min: 320,
-      max: 390,
+      min: 384,
+      max: 468,
       accent: "#93ecff",
       tier: "minor",
       rarity: 1,
       minDecel: 140,
-      trigger: 348,
+      trigger: 420,
       triggered: false,
       armed: true
     };
 
-    expect(shouldTriggerRetroCollapse(band, 352, 344, true, 180)).toBe(true);
-    expect(shouldTriggerRetroCollapse(band, 352, 344, false, 180)).toBe(false);
-    expect(shouldTriggerRetroCollapse(band, 352, 344, true, 90)).toBe(false);
-    expect(shouldTriggerRetroCollapse({ ...band, armed: false }, 352, 344, true, 180)).toBe(false);
-    expect(shouldTriggerRetroCollapse({ ...band, triggered: true }, 352, 344, true, 180)).toBe(false);
+    expect(shouldTriggerRetroCollapse(band, 428, 416, true, 180)).toBe(true);
+    expect(shouldTriggerRetroCollapse(band, 428, 416, false, 180)).toBe(false);
+    expect(shouldTriggerRetroCollapse(band, 428, 416, true, 90)).toBe(false);
+    expect(shouldTriggerRetroCollapse({ ...band, armed: false }, 428, 416, true, 180)).toBe(false);
+    expect(shouldTriggerRetroCollapse({ ...band, triggered: true }, 428, 416, true, 180)).toBe(false);
   });
 
   it("rearms only after the ship climbs back above the band ceiling", () => {
     const band: RetroCollapseBandState = {
       id: "relay-dump",
       label: "Relay Dump",
-      min: 480,
-      max: 520,
+      min: 576,
+      max: 624,
       accent: "#b9d8ff",
       tier: "major",
       rarity: 0.52,
       minDecel: 180,
-      trigger: 504,
+      trigger: 600,
       triggered: true,
       armed: true
     };
 
-    const stillBelow = rearmRetroCollapseBandIfAbove(band, 500, 518, {
+    const stillBelow = rearmRetroCollapseBandIfAbove(band, 602, 618, {
       range(min) {
         return min + 8;
       },
@@ -71,7 +71,7 @@ describe("retro collapse bands", () => {
         return true;
       }
     });
-    const rearmed = rearmRetroCollapseBandIfAbove(band, 518, 528, {
+    const rearmed = rearmRetroCollapseBandIfAbove(band, 618, 632, {
       range(min) {
         return min + 6;
       },
@@ -82,7 +82,7 @@ describe("retro collapse bands", () => {
 
     expect(stillBelow).toEqual(band);
     expect(rearmed.triggered).toBe(false);
-    expect(rearmed.trigger).toBe(486);
+    expect(rearmed.trigger).toBe(582);
     expect(rearmed.armed).toBe(false);
   });
 });

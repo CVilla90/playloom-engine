@@ -21,8 +21,8 @@ export const RETRO_COLLAPSE_BANDS: readonly RetroCollapseBandConfig[] = [
   {
     id: "relay-dump",
     label: "Relay Dump",
-    min: 480,
-    max: 520,
+    min: 576,
+    max: 624,
     accent: "#b9d8ff",
     tier: "major",
     rarity: 0.52,
@@ -31,8 +31,8 @@ export const RETRO_COLLAPSE_BANDS: readonly RetroCollapseBandConfig[] = [
   {
     id: "wake-collapse",
     label: "Wake Collapse",
-    min: 320,
-    max: 390,
+    min: 384,
+    max: 468,
     accent: "#93ecff",
     tier: "minor",
     rarity: 1,
@@ -41,8 +41,8 @@ export const RETRO_COLLAPSE_BANDS: readonly RetroCollapseBandConfig[] = [
   {
     id: "retro-shock",
     label: "Retro Shock",
-    min: 170,
-    max: 250,
+    min: 204,
+    max: 300,
     accent: "#d9e8ff",
     tier: "minor",
     rarity: 1,

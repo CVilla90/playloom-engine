@@ -54,6 +54,7 @@ npm install
 npm run dev
 npm run new-game -- my-game-id
 npm run new-game -- my-game-id --set-default
+npm run export:arcade -- my-game-id
 npm run validate
 npm run test
 npm run smoke
@@ -87,6 +88,23 @@ npm run asset:gen -- music-loop <game-id> <asset-id> --preset ambient --duration
 ```
 
 Generated assets are registered into the game asset manifest automatically by the tool.
+
+## Arcade Export
+Use this when a game should become playable inside `playloom-arcade`.
+
+```bash
+npm run export:arcade -- <game-id>
+```
+
+What it does:
+- builds the chosen game with relative asset paths
+- writes the export to `../playloom-arcade/runtime/<game-id>/`
+- leaves the main engine `index.html` unchanged
+
+After export:
+1. confirm `playloom-arcade/runtime/<game-id>/index.html` exists
+2. set that game's `deployment.status` to `"live"` in `playloom-arcade/site-data.js`
+3. keep `deployment.runtimePath` pointed at `/runtime/<game-id>/index.html`
 
 ## Boundary Rules
 - Allowed:

@@ -55,6 +55,7 @@ export class CockpitAudio {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
   private enabled = true;
+  private volume = 1;
   private initialized = false;
 
   private leftOsc: OscillatorNode | null = null;
@@ -113,7 +114,16 @@ export class CockpitAudio {
       return;
     }
 
-    this.target(this.master.gain, enabled ? 0.92 : 0.0001, 0.08);
+    this.target(this.master.gain, this.currentMasterGain(), 0.08);
+  }
+
+  setVolume(volume: number): void {
+    this.volume = Math.max(0, volume);
+    if (!this.master || !this.context) {
+      return;
+    }
+
+    this.target(this.master.gain, this.currentMasterGain(), 0.08);
   }
 
   update(state: CockpitAudioState): void {
@@ -297,5 +307,9 @@ export class CockpitAudio {
     } catch {
       return;
     }
+  }
+
+  private currentMasterGain(): number {
+    return this.enabled ? Math.max(0.0001, 0.92 * this.volume) : 0.0001;
   }
 }

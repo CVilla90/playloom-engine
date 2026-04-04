@@ -12,24 +12,21 @@
         background: radial-gradient(circle at top, #182130 0%, #0b1018 54%, #040608 100%);
         color: #f6f2df;
         font-family: "Trebuchet MS", Verdana, sans-serif;
-        height: 100%;
+        min-height: 100%;
       }
 
       body {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        min-height: 100vh;
       }
 
       #app {
         width: 100%;
         display: flex;
         justify-content: center;
+        align-items: flex-start;
       }
 
       canvas {
-        border: 2px solid #5a708d;
-        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.52);
         max-width: 100%;
         height: auto;
       }

@@ -22,11 +22,11 @@ export interface DramaticSurgeBandState extends DramaticSurgeBandConfig {
 }
 
 export const DRAMATIC_SURGE_BANDS: readonly DramaticSurgeBandConfig[] = [
-  { id: "warm-spike", label: "Warm Spike", min: 80, max: 120, accent: "#7edaff", tier: "minor", rarity: 1 },
-  { id: "hull-tremor", label: "Hull Tremor", min: 180, max: 220, accent: "#ffe08f", tier: "minor", rarity: 1 },
-  { id: "wake-kick", label: "Wake Kick", min: 280, max: 320, accent: "#9aefc0", tier: "minor", rarity: 1 },
-  { id: "slip-crack", label: "Slip Crack", min: 380, max: 420, accent: "#ffb08f", tier: "major", rarity: 0.58 },
-  { id: "relay-black", label: "Relay Black", min: 480, max: 520, accent: "#ff8ec0", tier: "major", rarity: 0.42 }
+  { id: "warm-spike", label: "Warm Spike", min: 96, max: 144, accent: "#7edaff", tier: "minor", rarity: 1 },
+  { id: "hull-tremor", label: "Hull Tremor", min: 216, max: 264, accent: "#ffe08f", tier: "minor", rarity: 1 },
+  { id: "wake-kick", label: "Wake Kick", min: 336, max: 384, accent: "#9aefc0", tier: "minor", rarity: 1 },
+  { id: "slip-crack", label: "Slip Crack", min: 456, max: 504, accent: "#ffb08f", tier: "major", rarity: 0.58 },
+  { id: "relay-black", label: "Relay Black", min: 576, max: 624, accent: "#ff8ec0", tier: "major", rarity: 0.42 }
 ];
 
 export function rollSurgeTrigger(band: DramaticSurgeBandConfig, rng: RangeLike): number {

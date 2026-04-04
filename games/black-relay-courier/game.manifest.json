@@ -7,7 +7,7 @@
     "height": 720,
     "targetFps": 60
   },
-  "features": ["prototype"],
+  "features": ["prototype", "save"],
   "assetsManifest": "assets/asset.manifest.json",
   "save": {
     "key": "black-relay-courier.save.v1",

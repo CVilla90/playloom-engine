@@ -7,6 +7,7 @@ export class SynthAudio {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
   private enabled = true;
+  private volume = 1;
 
   unlock(): void {
     if (!this.enabled || this.context) return;
@@ -14,12 +15,18 @@ export class SynthAudio {
     if (!Ctor) return;
     this.context = new Ctor();
     this.master = this.context.createGain();
-    this.master.gain.value = 0.25;
+    this.master.gain.value = this.currentMasterGain();
     this.master.connect(this.context.destination);
   }
 
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
+    this.syncMasterGain();
+  }
+
+  setVolume(volume: number): void {
+    this.volume = Math.max(0, volume);
+    this.syncMasterGain();
   }
 
   beep(freq = 440, duration = 0.07, type: OscillatorType = "square"): void {
@@ -92,5 +99,18 @@ export class SynthAudio {
 
     osc.start(start);
     osc.stop(end + 0.02);
+  }
+
+  private currentMasterGain(): number {
+    return this.enabled ? Math.max(0.0001, 0.25 * this.volume) : 0.0001;
+  }
+
+  private syncMasterGain(): void {
+    if (!this.context || !this.master) {
+      return;
+    }
+
+    this.master.gain.cancelScheduledValues(this.context.currentTime);
+    this.master.gain.setTargetAtTime(this.currentMasterGain(), this.context.currentTime, 0.05);
   }
 }

@@ -28,6 +28,7 @@
     "asset:gen": "node packages/engine-assets/tools/asset-lab.mjs",
     "cli": "node packages/cli/src/playloom.mjs",
     "new-game": "node packages/cli/src/playloom.mjs new-game",
+    "export:arcade": "node tools/export-arcade.mjs",
     "validate:manifests": "node tools/validate-manifests.mjs",
     "validate:boundaries": "node tools/check-boundaries.mjs",
     "validate": "npm run validate:manifests && npm run validate:boundaries",
