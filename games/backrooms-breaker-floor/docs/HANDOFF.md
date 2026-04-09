@@ -1,107 +1,221 @@
 # Backrooms: Breaker Floor Handoff
 
+_Last updated: April 8, 2026_
+
 ## Purpose
-This document is the return point for this prototype. It records what exists today, what is still temporary, and what the next sensible steps are so work can pause cleanly and resume later without reverse-engineering context.
+This document is the return point for this prototype. It records what is actually working now, what was fixed during the latest networking pass, and what still needs to be finished next so work can resume tomorrow without re-deriving context.
 
 ## Project status
-1. This is a local single-player prototype inside the engine repo.
-2. The target product is still `v1` online co-op for browser desktop plus iPad.
-3. Multiplayer has not started yet.
-4. The current build is proving map feel, objective readability, touch support, atmosphere, sprite presentation, and lighting behavior.
+1. This prototype now has a real shared-room multiplayer transport in the dev build.
+2. The target product is still `v1` online public-match play for browser desktop plus iPad.
+3. The game now runs by default against a WebSocket-backed authoritative public room hosted through Vite dev server integration.
+4. The authoritative match core, shared transport, async join flow, shared mission state, PVP/PVE combat, and first-pass client prediction are all working.
+5. The build is no longer at the "networking not started" stage. The current gap is feel/visibility polish for replicated actors, not basic transport.
+
+## Multiplayer progress snapshot
+### Done
+1. Public-room types and room-service contract under `src/multiplayer/`.
+2. Front screen wired to live room snapshots instead of a static menu.
+3. Full 7-phase round state machine in `AuthoritativePublicMatch`:
+   `waiting` → `round_joinable` → `round_locked` → `extraction_countdown` → `lockdown_swarm` → `results` → `resetting`
+4. Authoritative match core owns:
+   join acceptance and unique-name validation
+   authored spawn assignment
+   shared relay/panel mission progression
+   pickup state
+   extraction start and seal
+   timeout / wipe / extraction result resolution
+   PVP and PvE combat validation
+   primary stalker AI
+5. `protocol.ts` is now bound to a real transport, not just typed for later.
+6. `NetworkedAuthoritativePublicRoomService` is implemented and is the default room service in `main.ts`.
+7. `LocalAuthoritativePublicRoomService` still exists behind `?room=local` as the fallback/dev comparison path.
+8. `BackroomsPublicMatchSocketServer` hosts one authoritative `AuthoritativePublicMatch` instance over WebSockets inside the Vite dev server.
+9. Browser/server socket constants were split cleanly so the client no longer imports Node-only code.
+10. WebSocket upgrade handling was narrowed to `/ws/backrooms-breaker-floor`, so Vite HMR no longer breaks with `Invalid frame header`.
+11. `BootScene` now waits for async join acceptance instead of assuming same-frame success.
+12. Join/leave/reconnect flow works through the shared room service.
+13. `GameScene` consumes authoritative snapshot state for:
+   local spawn/health/death
+   relay/panel objective ids
+   pickup availability
+   remote player snapshots
+   round banners/results
+   primary stalker state
+14. Local player movement no longer feels frame-skippy in the networked room.
+15. That local movement fix came from first-pass client prediction/reconciliation plus throttled `input_update` sends in `NetworkedAuthoritativePublicRoomService`.
+16. Stalker visual movement no longer feels frame-skippy locally.
+17. That stalker fix came from render-side smoothing plus letting stalker attack animation time continue locally between snapshots.
+18. Joining the round no longer crashes on the first snapshot; the constructor-order bug around stalker bootstrap in `GameScene` was fixed.
+19. Damage numbers now appear when the local player damages authoritative targets: stalker hits still follow authoritative stalker health deltas, and resolved punch results now also drive exact floating damage numbers on struck remote players.
+20. Stalker pathing across connected rooms was improved with doorway-aligned traversal waypoints, so it no longer oscillates in front of many room boundaries before crossing.
+21. Stalker doorway traversal now commits into the next area instead of immediately re-evaluating chase spacing on the seam, which fixes the "hovering in the doorway" failure case when players bait a room transition during attack cooldown.
+22. Shared snapshots already replicate enough state for:
+   player names
+   positions/facing
+   health/death
+   pickups/objectives
+   banners/results
+   stalker state
+23. Remote players no longer render directly from raw snapshot coordinates; `GameScene` now keeps a render-side visual state per remote player and smooths body motion between authoritative updates.
+24. Remote player overlays now follow those smoothed positions too, so nameplates/health bars no longer jitter independently of the body.
+25. Player snapshots now replicate flashlight state plus first-pass punch animation state, so other clients can render remote flashlight use and remote punch telegraphing.
+26. Remote players now render under the darkness mask instead of on top of it, and other players' flashlight beams cut shared visibility into that mask for observers.
+27. Remote nameplates, health bars, stalker health bars, and floating damage numbers now obey the same reveal rules instead of leaking hidden actors for free.
+28. Late join now stays open until the final `90` seconds of the `6:00` round instead of closing after the first `2:00`, and mission completion no longer auto-locks the room before that timer.
+29. Player snapshots now carry authoritative `joinedAt`, which `GameScene` uses to trigger a short spawn/materialization effect for local and remote players.
+30. Touch HUD now includes a dedicated `LOBBY` button with a second-tap confirm instead of relying on desktop-only `Esc` copy.
+31. `world.test.ts` now forbids positive-area overlaps between authored walkable regions, documenting the archive-west/transit-spine geometry bug so it does not silently come back.
+32. Verified after the latest fixes:
+   `npm run validate`
+   `npm run check`
+   `npm run test`
+   `npm run smoke`
+
+### Still not done
+These are the remaining practical gaps after the networking pass.
+
+**1. Live multi-browser verification is still required**
+The remote punch and darkness pass is implemented, but it still needs real observer validation in multiple browser windows/tabs.
+What still needs to happen:
+- verify another player's punch reads clearly before or as damage lands
+- verify the attacking client reliably sees the correct damage number on struck players and the stalker
+- verify another player's flashlight beam visibly reveals shared space for observers
+- verify hidden actors are not given away by bars or floating numbers
+- verify remote movement smoothing, punch telegraphing, and darkness occlusion still feel coherent together under actual latency/jitter
+
+**2. Visibility tuning may still need one more pass**
+The rules are now wired together, but the exact reveal balance may still need tuning after live play.
+Possible follow-up knobs:
+- flashlight cone length/spread
+- ambient fixture reveal radius/strength
+- how aggressively overlays disappear at the edge of light
+- whether any remaining local-only visibility behavior should be tightened
+
+**3. Production/deployment work is still separate**
+The prototype has a real shared-room transport in dev, but there is still no dedicated deployable room host story finalized beyond the current Vite/dev integration.
 
 ## How to run it
 1. From the repo root, run `npm run dev`.
-2. Open `http://localhost:5173/games/backrooms-breaker-floor/`.
-3. The repo root route `/` may still point to another game; this game uses its own page on purpose.
+2. Open `http://localhost:5173/` or `http://localhost:5173/games/backrooms-breaker-floor/`.
+3. Default behavior uses the WebSocket-backed authoritative room.
+4. Use `?room=local` to force the in-process local-authority fallback path.
 
 ## What is currently implemented
-1. Top-down map with varied room sizes and hall widths.
+1. Top-down map expanded into a much larger multi-wing floor with archive, flooded, generator, depot, and exit-transfer sectors.
 2. Three collectible relays.
 3. Two breaker panels with enforced sequence.
 4. Locked exit shutter and exit terminal.
 5. Desktop keyboard movement and interaction.
-6. Touch joystick plus interact button overlay for iPad-style testing.
-7. Ambient fluorescent hum.
-8. Footstep, relay pickup, and breaker toggle sounds.
-9. Yellow hazmat-style player sprite.
-10. HUD with room name, objective, progress, prompts, and controls.
-11. Global darkness mask experiment with flashlight reveal.
+6. Touch joystick plus first-pass `USE / ACT / UTIL` controls, plus a confirm-to-leave `LOBBY` button, for iPad-style testing.
+7. Shared-room front screen with unique-name join validation, room status, join/round timing, and mission progress.
+8. Real shared-room authority over WebSockets in dev.
+9. PVP and PvE combat through the authoritative room service.
+10. One black-stickman PvE that roams, chases, attacks, can be killed, and now crosses authored room boundaries more fluently.
+11. Yellow hazmat-style player sprite plus corpse sprite on death.
+12. Health bars and floating damage numbers.
+13. Custom footstep, relay pickup, breaker toggle, punch, and stalker audio.
+14. Random floor pickups, currently energy drinks and med kits.
+15. Slim top summary HUD for area/objective/round status plus a matching top controls summary, with prompts and status text anchored at the bottom.
+16. Darkness mask plus flashlight reveal experiment.
+17. Real-time replicated remote players are rendered.
+18. Local player visual smoothing in the networked room.
+19. Stalker visual smoothing in the networked room.
+20. Remote player visual smoothing for bodies plus nameplate/health-bar tracking in the networked room.
+21. Remote flashlight replication plus shared darkness-mask reveal for other players.
+22. Remote punch telegraph replication using authoritative player punch state.
+23. Darkness-gated combat overlays and floating damage numbers.
 
 ## Current controls
 1. `W / A / S / D` or arrow keys: move
 2. `E`, `Enter`, or `Space`: interact
-3. `F`: toggle flashlight
-4. `G`: toggle darkness mask
-5. `H`: toggle help overlay
-6. `M`: mute / unmute
-7. `Esc`: return to title
-8. `R`: return to title after escape
-9. Touch:
+3. `J` or `X`: punch
+4. `F`: toggle flashlight
+6. `H`: toggle help overlay
+7. `M`: mute / unmute
+8. `Esc`: return to title
+9. `R`: return to title after escape or death
+10. Touch:
    left pad moves
-   right button interacts
-
-## Current game loop
-1. Spawn in the entry side of the breaker floor.
-2. Recover all three relays.
-3. Activate `Core Breaker A`.
-4. Activate `Observation Reroute B`.
-5. Reach the exit terminal after the shutter opens.
+   lower-right button uses / interacts
+   left-side action button triggers the primary action (`ACT`, currently punch)
+   upper-right button triggers utility (`UTIL`, currently flashlight)
+   top-right button leaves for the lobby after a confirm tap
+11. Debug only:
+   add `?debugMask=1` to the URL, then `G` toggles the darkness compare view and the on-canvas mask button becomes available
 
 ## Lighting state
-1. Lighting is intentionally in a debug-heavy state.
-2. The rendered world is drawn first.
-3. A full black darkness mask is drawn on top.
-4. The flashlight cuts visibility out of that darkness mask.
-5. `G` exists specifically to compare:
-   raw map with no mask
-   masked map with flashlight reveal
-6. Several room colors are intentionally more distinct than final art so the reveal behavior is easier to inspect.
-7. There is also an on-canvas debug button for the darkness mask.
-
-## Important note about the current lighting work
-The flashlight and darkness work was being iterated live. The active question at pause time is not whether there should be darkness, but whether the flashlight reveal feels like a true visibility tool instead of just a decorative cone. That means the current build should be treated as a visibility test bed, not a finished art pass.
+1. Lighting is still intentionally experimental/debug-heavy.
+2. The world is rendered first.
+3. A darkness mask is drawn on top.
+4. The flashlight cuts visibility out of that mask.
+5. The compare/debug toggle is now hidden from normal play and only exposed under `?debugMask=1`.
+6. The remaining lighting issue is no longer just "does the cone look right".
+7. The real unfinished problem is visibility correctness for replicated actors and their overlays under darkness.
 
 ## Key files
 1. [GameScene.ts](C:/Users/carlo/code/Brainstorm/playloom-engine/games/backrooms-breaker-floor/src/scenes/GameScene.ts)
-   main gameplay scene, player movement, objective flow, HUD, darkness mask, flashlight, audio hooks
-2. [world.ts](C:/Users/carlo/code/Brainstorm/playloom-engine/games/backrooms-breaker-floor/src/world.ts)
-   room layout, palette, interactable placement, dimensions
-3. [TouchControls.ts](C:/Users/carlo/code/Brainstorm/playloom-engine/games/backrooms-breaker-floor/src/touch/TouchControls.ts)
-   iPad-oriented touch movement and interact UI
-4. [assets.ts](C:/Users/carlo/code/Brainstorm/playloom-engine/games/backrooms-breaker-floor/src/assets.ts)
-   sprite and audio loading
-5. [index.html](C:/Users/carlo/code/Brainstorm/playloom-engine/games/backrooms-breaker-floor/index.html)
-   game-specific entry page for local dev
-6. [V1_SPEC.md](C:/Users/carlo/code/Brainstorm/playloom-engine/games/backrooms-breaker-floor/docs/V1_SPEC.md)
-   target online game scope
+   gameplay scene, replicated actor rendering, HUD, darkness mask, flashlight, combat overlays
+2. [BootScene.ts](C:/Users/carlo/code/Brainstorm/playloom-engine/games/backrooms-breaker-floor/src/scenes/BootScene.ts)
+   front screen, async join flow, public-room status surface
+3. [NetworkedAuthoritativePublicRoomService.ts](C:/Users/carlo/code/Brainstorm/playloom-engine/games/backrooms-breaker-floor/src/multiplayer/NetworkedAuthoritativePublicRoomService.ts)
+   browser transport, prediction/reconciliation, reconnect/join flow
+4. [BackroomsPublicMatchSocketServer.ts](C:/Users/carlo/code/Brainstorm/playloom-engine/games/backrooms-breaker-floor/src/multiplayer/server/BackroomsPublicMatchSocketServer.ts)
+   WebSocket room host bound into Vite
+5. [AuthoritativePublicMatch.ts](C:/Users/carlo/code/Brainstorm/playloom-engine/games/backrooms-breaker-floor/src/multiplayer/AuthoritativePublicMatch.ts)
+   authoritative round, combat, mission, stalker, timers, results
+6. [protocol.ts](C:/Users/carlo/code/Brainstorm/playloom-engine/games/backrooms-breaker-floor/src/multiplayer/protocol.ts)
+   transport DTOs/messages
+7. [stalker.ts](C:/Users/carlo/code/Brainstorm/playloom-engine/games/backrooms-breaker-floor/src/stalker.ts)
+   area graph, roam selection, traversal waypoints
+8. [vite.config.ts](C:/Users/carlo/code/Brainstorm/playloom-engine/vite.config.ts)
+   dev-server integration for the shared room
+9. [MULTIPLAYER_SPEC.md](C:/Users/carlo/code/Brainstorm/playloom-engine/games/backrooms-breaker-floor/docs/MULTIPLAYER_SPEC.md)
+   source of truth for public-match rules/phases
 
 ## What is intentionally not done yet
-1. Online multiplayer
-2. Room-code flow
-3. Replit deployment server
-4. Remote player sprites or sync interpolation
-5. Final art direction for rooms
-6. Final lighting balance
-7. Final mobile UX tuning
+1. Live multi-browser verification of remote punch readability and darkness/visibility correctness
+2. Final tuning of flashlight and ambient reveal balance after that verification
+3. Final art direction for rooms
+4. Final lighting balance
+5. Final mobile UX tuning
+6. Dedicated production room-host/deployment path beyond the current dev integration
 
 ## Suggested resume order
-1. Re-check the darkness mask and flashlight reveal against clearly visible room text and floor colors.
-2. Once the visibility model feels correct, decide whether to keep all-room blackout or reintroduce selective ambient light per room.
-3. Remove or hide debug-only lighting controls from normal play if they are no longer needed.
-4. Start the online room server as a game-local layer instead of changing the engine globally.
-5. Add 2-player sync first, while keeping room capacity data-structured for more players later.
+Target: finish feel/readability polish for the shared room before broader feature work.
+
+1. **Run a live multi-browser verification pass**
+Specifically verify:
+- two-player movement readability
+- remote punch readability
+- shared flashlight visibility for observers
+- darkness occlusion of actors and overlays
+- stalker chase across multiple rooms
+
+2. **Tune reveal balance based on that pass**
+Adjust flashlight/ambient reveal and any overlay edge cases only after watching the current implementation in live play.
+
+3. **Only then move on to broader polish**
+After that verification/tuning pass, return to art/lighting/mobile tuning and production-host planning.
 
 ## Practical scope reminder
 Keep `v1` small:
-1. 2-player co-op first
-2. private room code
+1. one public room first
+2. max `6` players
 3. one short session
-4. no combat
+4. combat and extraction only, no feature sprawl
 5. no jump scares
 6. no infinite generation
 7. no voice chat
 
 ## Notes for future-you
-1. The root repo had unrelated dirty changes, so this game was kept isolated on its own route instead of taking over `/`.
-2. The current prototype is already a decent atmosphere and pacing test; the largest unfinished system is networking, not content.
-3. If returning after a while, do not assume the lighting debug tools are shippable features. Re-evaluate them as development aids first.
+1. Default dev path is now the networked room, not the old local-only room.
+2. `?room=local` is the fallback if you need the in-process authority path while debugging.
+3. Do not reintroduce browser imports of the Node socket server. Shared constants live in `socketConstants.ts`.
+4. The Vite integration must only handle WebSocket upgrades for `/ws/backrooms-breaker-floor`; otherwise HMR breaks again.
+5. Local player feel, stalker feel, remote player smoothing, remote punch telegraphing, and first-pass darkness-correct visibility are now in. The next job is live validation and tuning, not a new feature layer.
+6. Darkness is still a gameplay/visibility problem, not an art-complete system. Treat it as a visibility-rules task first.
+7. Shared flashlight visibility is part of gameplay readability now, not optional polish. It affects both co-op readability and PvP stealth/position disclosure.
+8. The next important polish milestone is not "more features". It is "remote actors and their light sources feel readable, fair, and correctly hidden/revealed under light."
+9. The release-facing HUD now uses slim top summary bars; keep future status/control additions inside that condensed format instead of reintroducing large in-game cards.
+10. Authored walkable areas must only touch, not overlap. Positive-area overlaps break `currentAreaAt` and doorway traversal assumptions inside `AuthoritativePublicMatch` and `stalker.ts`.

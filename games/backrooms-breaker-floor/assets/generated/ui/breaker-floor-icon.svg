@@ -1,0 +1,61 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="72" y1="54" x2="440" y2="472" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#302915"/>
+      <stop offset="0.52" stop-color="#15120B"/>
+      <stop offset="1" stop-color="#090A0C"/>
+    </linearGradient>
+    <linearGradient id="hood" x1="174" y1="184" x2="338" y2="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F1D773"/>
+      <stop offset="0.56" stop-color="#BEA14B"/>
+      <stop offset="1" stop-color="#6B5421"/>
+    </linearGradient>
+    <linearGradient id="visor" x1="196" y1="236" x2="318" y2="316" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ECFAFF"/>
+      <stop offset="0.45" stop-color="#B7DDE8"/>
+      <stop offset="1" stop-color="#638692"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="292" y1="284" x2="458" y2="284" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E6F8FF" stop-opacity="0.9"/>
+      <stop offset="0.58" stop-color="#9CE0EB" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#9CE0EB" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(258 214) rotate(90) scale(162 152)">
+      <stop offset="0" stop-color="#F5DF8A" stop-opacity="0.65"/>
+      <stop offset="0.48" stop-color="#D4B95B" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#D4B95B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bolt" x1="230" y1="312" x2="270" y2="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFF3BF"/>
+      <stop offset="1" stop-color="#F4C84F"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="32" y="32" width="448" height="448" rx="108" fill="url(#bg)"/>
+  <rect x="44" y="44" width="424" height="424" rx="96" stroke="#FFEEB2" stroke-opacity="0.28" stroke-width="2"/>
+  <rect x="84" y="84" width="344" height="344" rx="56" fill="#0B0D10" fill-opacity="0.74" stroke="#FFF0BD" stroke-opacity="0.14"/>
+
+  <path d="M114 408L176 346L336 346L398 408" stroke="#2C2412" stroke-width="12" stroke-linecap="round"/>
+  <path d="M146 136H208" stroke="#6C623E" stroke-width="12" stroke-linecap="round"/>
+  <path d="M242 136H304" stroke="#6C623E" stroke-width="12" stroke-linecap="round"/>
+  <path d="M338 136H366" stroke="#6C623E" stroke-width="12" stroke-linecap="round"/>
+  <path d="M156 172L210 208L210 368L156 412" stroke="#302811" stroke-width="4"/>
+  <path d="M356 172L302 208L302 368L356 412" stroke="#302811" stroke-width="4"/>
+
+  <ellipse cx="258" cy="214" rx="162" ry="152" fill="url(#glow)"/>
+  <path d="M300 280L460 240V352L310 332L300 280Z" fill="url(#beam)"/>
+
+  <path d="M174 338C174 250 210 184 256 184C302 184 338 250 338 338V378H174V338Z" fill="url(#hood)"/>
+  <path d="M186 346C186 266 218 206 256 206C294 206 326 266 326 346V366H186V346Z" stroke="#F9E69F" stroke-width="6" stroke-opacity="0.42"/>
+  <rect x="194" y="236" width="124" height="82" rx="32" fill="url(#visor)"/>
+  <rect x="194" y="236" width="124" height="82" rx="32" stroke="#F7F7F7" stroke-opacity="0.26" stroke-width="4"/>
+  <path d="M214 256C234 244 280 244 298 258" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="8" stroke-linecap="round"/>
+  <path d="M302 328L340 348" stroke="#F4CF69" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="342" cy="350" r="14" fill="#D6EEF7" fill-opacity="0.26" stroke="#E6FBFF" stroke-opacity="0.55" stroke-width="4"/>
+
+  <path d="M246 308L226 338H246L236 372L286 330H260L276 308H246Z" fill="url(#bolt)"/>
+
+  <path d="M160 392H352" stroke="#7C6933" stroke-opacity="0.42" stroke-width="6" stroke-linecap="round"/>
+  <path d="M156 104H252" stroke="#BDAA68" stroke-opacity="0.22" stroke-width="6" stroke-linecap="round"/>
+  <path d="M280 104H356" stroke="#BDAA68" stroke-opacity="0.22" stroke-width="6" stroke-linecap="round"/>
+</svg>

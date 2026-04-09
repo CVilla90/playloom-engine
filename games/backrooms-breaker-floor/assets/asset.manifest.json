@@ -9,6 +9,13 @@
       "source": "games/backrooms-breaker-floor/assets/generated/sprites/yellow-suit.svg#manual"
     },
     {
+      "id": "breaker-floor-icon",
+      "kind": "image",
+      "path": "generated/ui/breaker-floor-icon.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/ui/breaker-floor-icon.svg#manual"
+    },
+    {
       "id": "yellow-suit-sprite-meta",
       "kind": "data",
       "path": "generated/sprites/yellow-suit.sprite.json",
@@ -16,32 +23,102 @@
       "source": "games/backrooms-breaker-floor/assets/generated/sprites/yellow-suit.sprite.json#manual"
     },
     {
-      "id": "fluorescent-hum",
-      "kind": "audio",
-      "path": "generated/audio/fluorescent-hum.wav",
+      "id": "stalker-corpse",
+      "kind": "image",
+      "path": "generated/sprites/stalker-corpse.svg",
       "license": "generated-in-repo",
-      "source": "packages/engine-assets/tools/asset-lab.mjs#music-ambient"
+      "source": "games/backrooms-breaker-floor/assets/generated/sprites/stalker-corpse.svg#manual"
     },
     {
-      "id": "hazmat-step",
-      "kind": "audio",
-      "path": "generated/audio/hazmat-step.wav",
+      "id": "yellow-suit-corpse",
+      "kind": "image",
+      "path": "generated/sprites/yellow-suit-corpse.svg",
       "license": "generated-in-repo",
-      "source": "packages/engine-assets/tools/asset-lab.mjs#sfx-hit"
+      "source": "games/backrooms-breaker-floor/assets/generated/sprites/yellow-suit-corpse.svg#manual"
     },
     {
-      "id": "relay-pickup",
+      "id": "backrooms-office-hum-01",
       "kind": "audio",
-      "path": "generated/audio/relay-pickup.wav",
+      "path": "generated/audio/backrooms-office-hum-01.wav",
       "license": "generated-in-repo",
-      "source": "packages/engine-assets/tools/asset-lab.mjs#sfx-pickup"
+      "source": "games/backrooms-breaker-floor/tools/generate-audio.mjs#ambient"
     },
     {
-      "id": "breaker-toggle",
+      "id": "backrooms-office-hum-02",
       "kind": "audio",
-      "path": "generated/audio/breaker-toggle.wav",
+      "path": "generated/audio/backrooms-office-hum-02.wav",
       "license": "generated-in-repo",
-      "source": "packages/engine-assets/tools/asset-lab.mjs#sfx-laser"
+      "source": "games/backrooms-breaker-floor/tools/generate-audio.mjs#ambient"
+    },
+    {
+      "id": "backrooms-office-hum-03",
+      "kind": "audio",
+      "path": "generated/audio/backrooms-office-hum-03.wav",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/tools/generate-audio.mjs#ambient"
+    },
+    {
+      "id": "backrooms-office-hum-04",
+      "kind": "audio",
+      "path": "generated/audio/backrooms-office-hum-04.wav",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/tools/generate-audio.mjs#ambient"
+    },
+    {
+      "id": "backrooms-suit-step",
+      "kind": "audio",
+      "path": "generated/audio/backrooms-suit-step.wav",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/tools/generate-audio.mjs#step"
+    },
+    {
+      "id": "backrooms-punch-swing",
+      "kind": "audio",
+      "path": "generated/audio/backrooms-punch-swing.wav",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/tools/generate-audio.mjs#punch-swing"
+    },
+    {
+      "id": "backrooms-punch-impact",
+      "kind": "audio",
+      "path": "generated/audio/backrooms-punch-impact.wav",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/tools/generate-audio.mjs#punch-impact"
+    },
+    {
+      "id": "backrooms-relay-surge",
+      "kind": "audio",
+      "path": "generated/audio/backrooms-relay-surge.wav",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/tools/generate-audio.mjs#relay"
+    },
+    {
+      "id": "backrooms-breaker-clang",
+      "kind": "audio",
+      "path": "generated/audio/backrooms-breaker-clang.wav",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/tools/generate-audio.mjs#breaker"
+    },
+    {
+      "id": "backrooms-stalker-step",
+      "kind": "audio",
+      "path": "generated/audio/backrooms-stalker-step.wav",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/tools/generate-audio.mjs#stalker-step"
+    },
+    {
+      "id": "backrooms-stalker-growl",
+      "kind": "audio",
+      "path": "generated/audio/backrooms-stalker-growl.wav",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/tools/generate-audio.mjs#stalker-growl"
+    },
+    {
+      "id": "backrooms-stalker-growl-02",
+      "kind": "audio",
+      "path": "generated/audio/backrooms-stalker-growl-02.wav",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/tools/generate-audio.mjs#stalker-growl-02"
     }
   ]
 }

@@ -1,38 +1,43 @@
 # Backrooms: Breaker Floor v1 Spec
 
 ## Product goal
-Ship a small online co-op Backrooms game that works in the browser on desktop and iPad, favors tension over shock, and is deployable on Replit without requiring heavyweight backend infrastructure.
+Ship a small online Backrooms match game that works in the browser on desktop and iPad, favors tension over shock, and is deployable on lightweight web hosting without heavyweight backend infrastructure.
 
 ## Experience pillars
-1. Co-op first: players move freely and solve the escape loop together.
+1. Shared-space tension: multiple players occupy the same floor and create both cooperation and threat.
 2. Slow dread: fluorescent hum, oppressive layout, and isolation pressure instead of jump scares.
-3. Short sessions: one run should fit in 10 to 20 minutes.
-4. Tight scope: one floor, one objective chain, one reliable deployment path.
+3. Short sessions: one run should fit in roughly `6 to 8` minutes plus results/reset.
+4. Tight scope: one public room, one floor, one objective chain, one reliable deployment path.
 
 ## v1 target scope
-1. `2 players` online with a private room code.
-2. Free movement for both players at all times.
-3. Top-down 2D navigation across `8 to 12` connected spaces.
+1. `1 public room` with up to `6 players`.
+2. Name-based join flow with no accounts.
+3. Top-down 2D navigation across the existing breaker-floor layout.
 4. Shared objective chain:
    collect relays -> activate core breaker -> reroute hallway power -> open exit
-5. Browser support:
+5. One player may trigger extraction after the mission is complete.
+6. Late join is allowed until the final `90 seconds` of the `6 minute` round.
+7. Round timer is `6 minutes`.
+8. PVP is enabled.
+9. Browser support:
    desktop keyboard
    iPad landscape touch controls
-6. Replit deployment with a lightweight room server and browser client.
+10. Lightweight room server plus browser client.
 
 ## Non-goals
-1. No public matchmaking.
-2. No voice chat.
-3. No combat.
-4. No infinite procedural maze.
-5. No crafting or complex inventory.
-6. No jump scares or instant-death ambushes.
+1. No account system.
+2. No multi-room matchmaking yet.
+3. No true spectator mode in the first release.
+4. No voice chat.
+5. No infinite procedural maze.
+6. No crafting or complex inventory.
+7. No jump scares or cheap instant ambushes.
 
 ## Current implementation milestone
-The first coded slice is intentionally smaller than the full online target:
+The current coded slice is still local-only, but it is now validating the actual combat-and-extraction shape that multiplayer will use:
 
 1. Local exploration prototype in a fixed Backrooms floor.
-2. Objective loop and room pacing validated before networking.
+2. Shared objective loop, local combat, pickups, and extraction geography validated before networking.
 3. Touch overlay validated before server sync.
 4. Multiplayer added next as a dedicated layer rather than mixed into throwaway prototype code.
 5. Lighting is currently being validated with a full-map darkness mask and flashlight reveal pass.
@@ -42,7 +47,7 @@ The first coded slice is intentionally smaller than the full online target:
 1. Playable route:
    `http://localhost:5173/games/backrooms-breaker-floor/`
 2. Current implemented systems:
-   title screen, local movement, interactables, objective chain, touch controls, audio, player sprite, HUD
+   title screen, local movement, interactables, objective chain, touch controls, audio, player/stalker combat, pickups, corpse states, HUD
 3. Current debug controls:
    `F` flashlight toggle, `G` darkness mask toggle, on-canvas `Mask ON/OFF` debug button
 4. Current lighting model:
@@ -53,29 +58,28 @@ The first coded slice is intentionally smaller than the full online target:
 ## What is not started yet
 1. Room server or networking transport
 2. Remote player replication
-3. Room-code join flow
+3. Public-room join flow
 4. Reconnect handling
 5. Multiplayer-specific UX and sync debugging
+6. Extraction-phase networking and win/loss synchronization
 
 ## Multiplayer shape
 1. Authoritative room state on a small Node server.
-2. Client sends movement intent and interaction requests.
-3. Server publishes player transforms, relay state, breaker state, and exit state.
-4. Room model supports an array of players from day one, but the shipped cap remains `2` until balance and UI are ready.
+2. Exactly one public room exists in the first release.
+3. Client sends movement intent, punch requests, and interaction requests.
+4. Server publishes player transforms, combat state, objective state, stalker state, and match phase.
+5. Room model supports an array of players from day one, with an initial shipped cap of `6`.
+6. Full round rules are defined in [MULTIPLAYER_SPEC.md](./MULTIPLAYER_SPEC.md).
 
-## Replit deployment notes
-1. Host the client and room server together as one web app.
-2. Use a single room code flow instead of account-based identity.
-3. Keep protocol small:
-   join room
-   player snapshot
-   interaction event
-   room state snapshot
-   disconnect / reconnect
+## Deployment notes
+1. Host the client and room server together as one web app when possible.
+2. Use name-based temporary identity instead of accounts.
+3. Keep protocol small and snapshot-driven.
+4. Do not build the first version around multiple lobby types.
 
 ## Next build steps
-1. Lock the flashlight and darkness behavior so visibility feels intentional rather than purely diagnostic.
-2. Decide which debug lighting tools stay for development only and which get removed from player-facing UI.
-3. Add a minimal networking package or game-local room server.
-4. Synchronize two players and room state.
-5. Add reconnect handling and mobile session testing.
+1. Freeze the public-room multiplayer rules in [MULTIPLAYER_SPEC.md](./MULTIPLAYER_SPEC.md).
+2. Build the room server and front-screen join status flow.
+3. Add authoritative player spawning and remote player replication.
+4. Synchronize shared objective state and timers.
+5. Add extraction countdown, lockdown seal, and results sync.

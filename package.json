@@ -26,6 +26,7 @@
     "test": "vitest run",
     "assets:generate": "node packages/engine-assets/tools/generate-svg-assets.mjs",
     "asset:gen": "node packages/engine-assets/tools/asset-lab.mjs",
+    "audio:backrooms": "node games/backrooms-breaker-floor/tools/generate-audio.mjs",
     "cli": "node packages/cli/src/playloom.mjs",
     "new-game": "node packages/cli/src/playloom.mjs new-game",
     "export:arcade": "node tools/export-arcade.mjs",
@@ -36,8 +37,12 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.5",
+    "@types/ws": "^8.18.1",
     "typescript": "^5.7.3",
     "vite": "^6.2.0",
     "vitest": "^2.1.8"
+  },
+  "dependencies": {
+    "ws": "^8.20.0"
   }
 }

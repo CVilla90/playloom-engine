@@ -3,37 +3,48 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Playloom Engine - Black Relay Courier</title>
+    <title>Playloom Engine - Backrooms: Breaker Floor</title>
     <style>
       html,
       body {
         margin: 0;
         padding: 0;
-        background: radial-gradient(circle at top, #182130 0%, #0b1018 54%, #040608 100%);
-        color: #f6f2df;
-        font-family: "Trebuchet MS", Verdana, sans-serif;
         min-height: 100%;
+        background:
+          radial-gradient(circle at top left, rgba(236, 210, 124, 0.16), transparent 30%),
+          radial-gradient(circle at top right, rgba(112, 212, 226, 0.12), transparent 24%),
+          linear-gradient(180deg, #12120f 0%, #08090b 100%);
+        color: #efe3ad;
+        font-family: "Aptos", "Segoe UI", sans-serif;
       }
 
       body {
-        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       #app {
         width: 100%;
         display: flex;
         justify-content: center;
-        align-items: flex-start;
+        padding: 24px;
+        box-sizing: border-box;
       }
 
       canvas {
-        max-width: 100%;
+        max-width: min(100%, 1100px);
         height: auto;
+        border: 1px solid rgba(240, 221, 147, 0.26);
+        border-radius: 24px;
+        box-shadow:
+          0 26px 80px rgba(0, 0, 0, 0.62),
+          0 0 0 1px rgba(255, 255, 255, 0.04);
       }
     </style>
   </head>
   <body>
     <div id="app"></div>
-    <script type="module" src="/games/black-relay-courier/src/main.ts"></script>
+    <script type="module" src="/games/backrooms-breaker-floor/src/main.ts"></script>
   </body>
 </html>
