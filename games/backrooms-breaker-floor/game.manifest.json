@@ -2,6 +2,7 @@
   "id": "backrooms-breaker-floor",
   "name": "Backrooms: Breaker Floor",
   "entry": "src/main.ts",
+  "serverEntry": "src/multiplayer/server/server-entry.ts",
   "render": {
     "width": 960,
     "height": 540,

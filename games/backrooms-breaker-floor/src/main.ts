@@ -35,6 +35,11 @@ class GameApp {
     stage.style.position = "relative";
     stage.style.width = "min(100%, 1100px)";
     stage.style.maxWidth = "1100px";
+    stage.style.display = "flex";
+    stage.style.alignItems = "center";
+    stage.style.justifyContent = "center";
+    stage.style.minWidth = "0";
+    stage.style.minHeight = "0";
     stage.style.touchAction = "none";
     stage.style.userSelect = "none";
     root.appendChild(stage);
@@ -43,8 +48,10 @@ class GameApp {
     canvas.width = GAME_MANIFEST.width;
     canvas.height = GAME_MANIFEST.height;
     canvas.setAttribute("aria-label", GAME_MANIFEST.name);
-    canvas.style.width = "100%";
+    canvas.style.width = "auto";
+    canvas.style.maxWidth = "100%";
     canvas.style.height = "auto";
+    canvas.style.maxHeight = "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px)";
     canvas.style.display = "block";
     canvas.style.touchAction = "none";
     canvas.style.userSelect = "none";

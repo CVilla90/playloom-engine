@@ -37,6 +37,111 @@
       "source": "games/backrooms-breaker-floor/assets/generated/sprites/yellow-suit-corpse.svg#manual"
     },
     {
+      "id": "locker-bank",
+      "kind": "image",
+      "path": "generated/props/locker-bank.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/locker-bank.svg#manual"
+    },
+    {
+      "id": "filing-cabinet",
+      "kind": "image",
+      "path": "generated/props/filing-cabinet.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/filing-cabinet.svg#manual"
+    },
+    {
+      "id": "water-cooler",
+      "kind": "image",
+      "path": "generated/props/water-cooler.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/water-cooler.svg#manual"
+    },
+    {
+      "id": "suit-rack",
+      "kind": "image",
+      "path": "generated/props/suit-rack.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/suit-rack.svg#manual"
+    },
+    {
+      "id": "archive-cart",
+      "kind": "image",
+      "path": "generated/props/archive-cart.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/archive-cart.svg#manual"
+    },
+    {
+      "id": "box-stack",
+      "kind": "image",
+      "path": "generated/props/box-stack.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/box-stack.svg#manual"
+    },
+    {
+      "id": "breaker-cabinet",
+      "kind": "image",
+      "path": "generated/props/breaker-cabinet.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/breaker-cabinet.svg#manual"
+    },
+    {
+      "id": "server-rack",
+      "kind": "image",
+      "path": "generated/props/server-rack.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/server-rack.svg#manual"
+    },
+    {
+      "id": "wet-floor-sign",
+      "kind": "image",
+      "path": "generated/props/wet-floor-sign.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/wet-floor-sign.svg#manual"
+    },
+    {
+      "id": "dead-office-plant",
+      "kind": "image",
+      "path": "generated/props/dead-office-plant.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/dead-office-plant.svg#manual"
+    },
+    {
+      "id": "almond-milk",
+      "kind": "image",
+      "path": "generated/props/almond-milk.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/almond-milk.svg#manual"
+    },
+    {
+      "id": "pistol-9mm",
+      "kind": "image",
+      "path": "generated/props/pistol-9mm.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/pistol-9mm.svg#manual"
+    },
+    {
+      "id": "ammo-box-9mm",
+      "kind": "image",
+      "path": "generated/props/ammo-box-9mm.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/ammo-box-9mm.svg#manual"
+    },
+    {
+      "id": "ration-can",
+      "kind": "image",
+      "path": "generated/props/ration-can.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/ration-can.svg#manual"
+    },
+    {
+      "id": "med-case",
+      "kind": "image",
+      "path": "generated/props/med-case.svg",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/assets/generated/props/med-case.svg#manual"
+    },
+    {
       "id": "backrooms-office-hum-01",
       "kind": "audio",
       "path": "generated/audio/backrooms-office-hum-01.wav",
@@ -84,6 +189,13 @@
       "path": "generated/audio/backrooms-punch-impact.wav",
       "license": "generated-in-repo",
       "source": "games/backrooms-breaker-floor/tools/generate-audio.mjs#punch-impact"
+    },
+    {
+      "id": "backrooms-pistol-shot",
+      "kind": "audio",
+      "path": "generated/audio/backrooms-pistol-shot.wav",
+      "license": "generated-in-repo",
+      "source": "games/backrooms-breaker-floor/tools/generate-audio.mjs#pistol-shot"
     },
     {
       "id": "backrooms-relay-surge",

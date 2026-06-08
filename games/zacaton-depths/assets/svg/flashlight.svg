@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 96" role="img" aria-label="forward hand flashlight">
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M106 54l18 2 1 11-19 1z" fill="#27312f" stroke="#a9ad99" stroke-width="2"/>
+    <circle cx="127" cy="62" r="5" fill="#f1ffdc" stroke="#d9ed9f" stroke-width="2"/>
+    <path d="M91 57l16 4" stroke="#1b2423" stroke-width="6"/>
+    <path d="M93 56l13 3" stroke="#aab0a1" stroke-width="2"/>
+  </g>
+</svg>

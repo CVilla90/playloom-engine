@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 96" role="img" aria-label="larger side-profile twin scuba tanks">
+  <defs>
+    <linearGradient id="tankA" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#343e40"/>
+      <stop offset="0.5" stop-color="#e0e3dc"/>
+      <stop offset="1" stop-color="#6d7771"/>
+    </linearGradient>
+  </defs>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <rect x="46" y="15" width="72" height="13" rx="6.5" transform="rotate(8 82 21)" fill="url(#tankA)" stroke="#10191d" stroke-width="2"/>
+    <rect x="44" y="30" width="74" height="13" rx="6.5" transform="rotate(8 81 36)" fill="url(#tankA)" stroke="#10191d" stroke-width="2"/>
+    <rect x="114" y="22" width="9" height="7" rx="2.5" transform="rotate(8 118 25)" fill="#c5cac4" stroke="#10191d" stroke-width="1.4"/>
+    <rect x="113" y="37" width="9" height="7" rx="2.5" transform="rotate(8 117 40)" fill="#c5cac4" stroke="#10191d" stroke-width="1.4"/>
+    <path d="M55 44l51 7M56 28l51 7" stroke="#10191d" stroke-width="4"/>
+  </g>
+</svg>

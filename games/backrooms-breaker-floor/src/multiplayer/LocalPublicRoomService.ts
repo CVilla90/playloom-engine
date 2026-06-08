@@ -19,8 +19,11 @@ import type {
   RoomPresence
 } from "./publicRoomTypes";
 import type {
+  MatchInventorySnapshot,
+  MatchOpenedContainerSnapshot,
   MatchPunchResult,
   MatchPlayerSnapshot,
+  MatchProjectileSnapshot,
   MatchSnapshot,
   MatchStalkerSnapshot
 } from "./protocol";
@@ -99,7 +102,15 @@ export class LocalPublicRoomService implements PublicRoomService {
     return null;
   }
 
+  getLocalInventorySnapshot(): MatchInventorySnapshot | null {
+    return null;
+  }
+
   consumeLocalPunchResults(): readonly MatchPunchResult[] {
+    return [];
+  }
+
+  consumeOpenedContainers(): readonly MatchOpenedContainerSnapshot[] {
     return [];
   }
 
@@ -185,7 +196,47 @@ export class LocalPublicRoomService implements PublicRoomService {
     };
   }
 
+  fireEquippedItem(_facing: { x: number; y: number }, _now = Date.now()): RoomActionResult<MatchProjectileSnapshot> {
+    return {
+      ok: false,
+      reason: "Authoritative gameplay is unavailable in this room service.",
+      value: null
+    };
+  }
+
+  openContainer(_containerId: string, _now = Date.now()): RoomActionResult<MatchOpenedContainerSnapshot> {
+    return {
+      ok: false,
+      reason: "Authoritative gameplay is unavailable in this room service.",
+      value: null
+    };
+  }
+
+  takeContainerItem(_containerId: string, _itemIndex: number, _now = Date.now()): RoomActionResult<MatchOpenedContainerSnapshot> {
+    return {
+      ok: false,
+      reason: "Authoritative gameplay is unavailable in this room service.",
+      value: null
+    };
+  }
+
+  takeAllContainerItems(_containerId: string, _now = Date.now()): RoomActionResult<MatchOpenedContainerSnapshot> {
+    return {
+      ok: false,
+      reason: "Authoritative gameplay is unavailable in this room service.",
+      value: null
+    };
+  }
+
   collectPickup(_pickupId: string, _now = Date.now()): RoomActionResult<MatchSnapshot> {
+    return {
+      ok: false,
+      reason: "Authoritative gameplay is unavailable in this room service.",
+      value: null
+    };
+  }
+
+  collectLooseItem(_itemId: string, _now = Date.now()): RoomActionResult<MatchSnapshot> {
     return {
       ok: false,
       reason: "Authoritative gameplay is unavailable in this room service.",
@@ -210,6 +261,30 @@ export class LocalPublicRoomService implements PublicRoomService {
   }
 
   startExtraction(_now = Date.now()): RoomActionResult<MatchSnapshot> {
+    return {
+      ok: false,
+      reason: "Authoritative gameplay is unavailable in this room service.",
+      value: null
+    };
+  }
+
+  useInventorySlot(_slotIndex: number, _now = Date.now()): RoomActionResult<MatchPlayerSnapshot> {
+    return {
+      ok: false,
+      reason: "Authoritative gameplay is unavailable in this room service.",
+      value: null
+    };
+  }
+
+  setActiveInventorySlot(_slotIndex: number, _now = Date.now()): RoomActionResult<MatchPlayerSnapshot> {
+    return {
+      ok: false,
+      reason: "Authoritative gameplay is unavailable in this room service.",
+      value: null
+    };
+  }
+
+  dropInventorySlot(_slotIndex: number, _now = Date.now()): RoomActionResult<MatchPlayerSnapshot> {
     return {
       ok: false,
       reason: "Authoritative gameplay is unavailable in this room service.",

@@ -1,7 +1,8 @@
 import { spawnSync } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { build as esbuild } from "esbuild";
 
 const toolRoot = dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = resolve(toolRoot, "..");
@@ -16,6 +17,9 @@ Usage:
 Options:
   --arcade <path>    Override the target playloom-arcade workspace path
   --mode <mode>      Vite mode to build with (default: phase4)
+
+If game.manifest.json defines "serverEntry", the exporter also bundles that
+Node entrypoint to playloom-arcade/game-servers/<game-id>.mjs.
 
 Example:
   npm run export:arcade -- black-relay-courier
@@ -36,10 +40,26 @@ function loadManifest(manifestPath) {
   return readFile(manifestPath, "utf8").then((content) => JSON.parse(content));
 }
 
+function resolveInsideGame(gameDir, rawPath, label) {
+  if (typeof rawPath !== "string" || rawPath.trim().length === 0) {
+    throw new Error(`${label} must be a non-empty game-relative path`);
+  }
+  const resolved = resolve(gameDir, rawPath);
+  const rel = normalize(relative(gameDir, resolved));
+  if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {
+    throw new Error(`${label} must stay inside the game folder`);
+  }
+  return resolved;
+}
+
 async function buildGame(gameId, arcadeRoot, mode) {
   const gameDir = join(workspaceRoot, "games", gameId);
   const manifestPath = join(gameDir, "game.manifest.json");
   const manifest = await loadManifest(manifestPath);
+  const serverEntry =
+    manifest.serverEntry !== undefined
+      ? resolveInsideGame(gameDir, manifest.serverEntry, "game.manifest.json serverEntry")
+      : null;
   const exportRoot = join(workspaceRoot, ".playloom-export", gameId);
   const viteRoot = exportRoot;
   const outDir = join(arcadeRoot, "runtime", gameId);
@@ -123,6 +143,31 @@ async function buildGame(gameId, arcadeRoot, mode) {
 
   console.log(`Exported ${gameId} to ${outDir}`);
   console.log(`Arcade runtime path: /runtime/${gameId}/index.html`);
+
+  if (serverEntry) {
+    await buildServer(gameId, serverEntry, arcadeRoot);
+  }
+}
+
+async function buildServer(gameId, entryPoint, arcadeRoot) {
+  const outDir = join(arcadeRoot, "game-servers");
+  const outFile = join(outDir, `${gameId}.mjs`);
+
+  await mkdir(outDir, { recursive: true });
+
+  await esbuild({
+    entryPoints: [entryPoint],
+    outfile: outFile,
+    bundle: true,
+    format: "esm",
+    platform: "node",
+    target: "node20",
+    external: ["ws", "node:*"],
+    minify: false,
+    sourcemap: false
+  });
+
+  console.log(`Server bundle exported to game-servers/${gameId}.mjs`);
 }
 
 async function main() {

@@ -199,12 +199,63 @@ export class BackroomsPublicMatchSocketServer {
         }
         if (message.targetKind === "pickup") {
           this.match.collectPickup(client.sessionId, message.targetId, now);
+        } else if (message.targetKind === "loose_item") {
+          this.match.collectLooseItem(client.sessionId, message.targetId, now);
         } else if (message.targetKind === "relay") {
           this.match.collectRelay(client.sessionId, message.targetId, now);
         } else if (message.targetKind === "panel") {
           this.match.activatePanel(client.sessionId, message.targetId, now);
+        } else if (message.targetKind === "container") {
+          const result = this.match.openContainer(client.sessionId, message.targetId, now);
+          if (result.ok && result.value) {
+            this.send(client.socket, {
+              type: "container_opened",
+              container: result.value
+            });
+          }
         } else {
           this.match.startExtraction(client.sessionId, now);
+        }
+        if (message.targetKind !== "container") {
+          this.broadcastSnapshot(now);
+        }
+        return;
+      case "container_take_request":
+        if (!client.joined) {
+          return;
+        }
+        const takeResult = this.match.takeContainerItem(client.sessionId, message.containerId, message.itemIndex, now);
+        if (takeResult.ok && takeResult.value) {
+          this.send(client.socket, {
+            type: "container_opened",
+            container: takeResult.value
+          });
+          this.broadcastSnapshot(now);
+        }
+        return;
+      case "container_take_all_request":
+        if (!client.joined) {
+          return;
+        }
+        const takeAllResult = this.match.takeAllContainerItems(client.sessionId, message.containerId, now);
+        if (takeAllResult.ok && takeAllResult.value) {
+          this.send(client.socket, {
+            type: "container_opened",
+            container: takeAllResult.value
+          });
+          this.broadcastSnapshot(now);
+        }
+        return;
+      case "inventory_action_request":
+        if (!client.joined) {
+          return;
+        }
+        if (message.action === "use") {
+          this.match.useInventorySlot(client.sessionId, message.slotIndex, now);
+        } else if (message.action === "set_active") {
+          this.match.setActiveInventorySlot(client.sessionId, message.slotIndex, now);
+        } else {
+          this.match.dropInventorySlot(client.sessionId, message.slotIndex, now);
         }
         this.broadcastSnapshot(now);
         return;
@@ -220,6 +271,13 @@ export class BackroomsPublicMatchSocketServer {
             result: result.value
           });
         }
+        return;
+      case "fire_equipped_request":
+        if (!client.joined) {
+          return;
+        }
+        this.match.fireEquippedItem(client.sessionId, message.facing, now);
+        this.broadcastSnapshot(now);
         return;
     }
   }

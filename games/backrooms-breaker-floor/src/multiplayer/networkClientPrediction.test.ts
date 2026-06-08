@@ -26,6 +26,12 @@ function createPlayerSnapshot(overrides: Partial<MatchPlayerSnapshot> = {}): Mat
     punchTimeRemainingMs: null,
     punchFacing: null,
     punchArmSide: null,
+    inventory: {
+      capacity: 6,
+      activeSlotIndex: null,
+      slots: [null, null, null, null, null, null],
+      ammo9mmReserve: 0
+    },
     ...overrides
   };
 }

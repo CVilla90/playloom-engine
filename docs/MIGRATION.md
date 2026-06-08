@@ -1,5 +1,10 @@
 # Migration Log
 
+## 2026-06-08 (Arcade export server-entry hardening)
+1. Documented optional `game.manifest.json` `serverEntry` for games with Node-side server bundles.
+2. Hardened `npm run export:arcade` so `serverEntry` is validated as a game-relative path before client export work.
+3. Extended manifest validation to reject invalid or missing `serverEntry` files without changing client-only game manifests.
+
 ## 2026-02-21
 ### Canonical rename and layout adoption
 1. Created new canonical workspace: `playloom-engine/`.

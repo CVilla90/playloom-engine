@@ -2,11 +2,25 @@ import { AudioMixer } from "@playloom/engine-audio";
 import { ActionMap, type ActionBindings } from "@playloom/engine-input";
 import type { Scene } from "@playloom/engine-core";
 import type { AppServices } from "../context";
+import {
+  CONTAINER_ITEM_DEFINITIONS,
+  SEARCHABLE_CONTAINERS
+} from "../containers";
+import {
+  INVENTORY_ITEM_DEFINITIONS,
+  canUseInventoryItem,
+  canEquipInventoryItem,
+  type InventoryItemType
+} from "../inventory";
 import { formatPublicRoomStatus, type PublicRoomSnapshot, type PublicRoundResults } from "../multiplayer/publicRoomTypes";
 import type {
+  MatchInventorySnapshot,
+  MatchLooseItemSnapshot,
+  MatchOpenedContainerSnapshot,
   MatchPickupSnapshot,
   MatchPunchResult,
   MatchPlayerSnapshot,
+  MatchProjectileSnapshot,
   MatchSnapshot,
   MatchStalkerSnapshot
 } from "../multiplayer/protocol";
@@ -17,6 +31,7 @@ import {
   PICKUP_DEFINITIONS,
   type PickupType
 } from "../pickups";
+import { DECOR_PROPS } from "../props";
 import { chooseRandomRoamArea, chooseRandomStalkerSpawn, findAreaPath, pickAreaPoint, waypointBetweenAreas, type Point } from "../stalker";
 import { BLACK_STICKMAN_TUNING, PLAYER_TUNING } from "../tuning";
 import { TouchControls } from "../touch/TouchControls";
@@ -37,7 +52,7 @@ import {
 } from "../world";
 
 interface InteractionPrompt {
-  kind: "relay" | "panel" | "exit";
+  kind: "relay" | "panel" | "exit" | "container" | "item";
   id: string;
   label: string;
   instruction: string;
@@ -140,6 +155,40 @@ interface PickupInstance {
   blockStatusCooldown: number;
 }
 
+interface LooseItemInstance {
+  id: string;
+  type: InventoryItemType;
+  x: number;
+  y: number;
+  pulseOffset: number;
+}
+
+interface ProjectileVisual {
+  id: string;
+  ownerId: string;
+  x: number;
+  y: number;
+  previousX: number;
+  previousY: number;
+  facingX: number;
+  facingY: number;
+  distanceRemaining: number;
+  maxDistance: number;
+}
+
+interface MuzzleFlashState {
+  timer: number;
+  facingX: number;
+  facingY: number;
+}
+
+interface InteractionCueTarget {
+  x: number;
+  y: number;
+  radius: number;
+  labelY: number;
+}
+
 type PunchArmSide = -1 | 1;
 
 const ACTIONS: ActionBindings = {
@@ -147,8 +196,10 @@ const ACTIONS: ActionBindings = {
   move_right: ["d", "arrowright"],
   move_up: ["w", "arrowup"],
   move_down: ["s", "arrowdown"],
+  toggle_inventory: ["i", "tab"],
   interact: ["e", "enter", " "],
   punch: ["j", "x"],
+  inventory_drop: ["q", "delete"],
   toggle_darkness: ["g"],
   toggle_flashlight: ["f"],
   toggle_help: ["h"],
@@ -170,6 +221,8 @@ const HEALTH_BAR_RED = "#df5a5a";
 const DAMAGE_TEXT_RED = "#ff6a6a";
 const PLAYER_HIT_FLASH_RED = "#ff7a7a";
 const NAME_OUTLINE_COLOR = "rgba(8, 7, 5, 0.82)";
+const PROJECTILE_FADE_DISTANCE = 36;
+const PISTOL_CAMERA_RECOVERY = 24;
 const REMOTE_PLAYER_VISUAL_SMOOTHING = 12;
 const REMOTE_PLAYER_VISUAL_SNAP_DISTANCE = 92;
 const STALKER_VISUAL_SMOOTHING = 14;
@@ -254,10 +307,16 @@ export class GameScene implements Scene {
   private readonly collectedRelays = new Set<string>();
   private readonly activatedPanels = new Set<string>();
   private readonly pickups: PickupInstance[] = [];
+  private readonly looseItems: LooseItemInstance[] = [];
+  private readonly projectiles: ProjectileVisual[] = [];
   private assets: GameAssets | null = null;
   private loadingError: string | null = null;
+  private cameraBaseX = 0;
+  private cameraBaseY = 0;
   private cameraX = 0;
   private cameraY = 0;
+  private cameraKickX = 0;
+  private cameraKickY = 0;
   private elapsed = 0;
   private stepClock = 0;
   private helpVisible = true;
@@ -267,10 +326,12 @@ export class GameScene implements Scene {
   private moveVisual = 0;
   private punchTimer = 0;
   private punchCooldown = 0;
+  private pistolCooldown = 0;
   private punchFacingX = 1;
   private punchFacingY = 0;
   private punchArmSide: PunchArmSide = 1;
   private nextPunchArmSide: PunchArmSide = 1;
+  private readonly muzzleFlashes = new Map<string, MuzzleFlashState>();
   private trainingDummyFlash = 0;
   private trainingDummyWobble = 0;
   private trainingDummyDiscovered = false;
@@ -293,6 +354,11 @@ export class GameScene implements Scene {
   private playerSpriteCtx: CanvasRenderingContext2D | null = null;
   private readonly floatingDamageNumbers: FloatingDamageNumber[] = [];
   private readonly remotePlayerVisuals = new Map<string, RemotePlayerVisualState>();
+  private openedContainer: MatchOpenedContainerSnapshot | null = null;
+  private inventoryVisible = false;
+  private inventorySelectedSlotIndex = 0;
+  private containerSelectedItemIndex = 0;
+  private overlayNavRepeatTimer = 0;
   private energyDrinkTimer = 0;
   private localJoinEffectJoinedAt: number | null = null;
   private localJoinEffectTimer = 0;
@@ -313,16 +379,18 @@ export class GameScene implements Scene {
   };
 
   private readonly handleCanvasPointerDown = (event: PointerEvent): void => {
-    if (!this.debugMaskControlsEnabled) {
-      return;
-    }
-
     const point = this.toCanvasPoint(event);
     if (!point) {
       return;
     }
 
-    if (rectContainsPoint(this.debugMaskButtonRect(), point.x, point.y)) {
+    if (this.handleOverlayPointerDown(point)) {
+      event.preventDefault();
+      return;
+    }
+
+    if (this.debugMaskControlsEnabled && rectContainsPoint(this.debugMaskButtonRect(), point.x, point.y)) {
+      event.preventDefault();
       this.toggleDarknessMask();
     }
   };
@@ -388,18 +456,14 @@ export class GameScene implements Scene {
     this.snapCamera();
     window.addEventListener("pointerdown", this.unlockAudio, { passive: true });
     window.addEventListener("keydown", this.unlockAudio);
-    if (this.debugMaskControlsEnabled) {
-      this.services.renderer.ctx.canvas.addEventListener("pointerdown", this.handleCanvasPointerDown, { passive: true });
-    }
+    this.services.renderer.ctx.canvas.addEventListener("pointerdown", this.handleCanvasPointerDown, { passive: false });
   }
 
   onExit(): void {
     this.touch.detach();
     window.removeEventListener("pointerdown", this.unlockAudio);
     window.removeEventListener("keydown", this.unlockAudio);
-    if (this.debugMaskControlsEnabled) {
-      this.services.renderer.ctx.canvas.removeEventListener("pointerdown", this.handleCanvasPointerDown);
-    }
+    this.services.renderer.ctx.canvas.removeEventListener("pointerdown", this.handleCanvasPointerDown);
     if (this.assets) {
       this.stopAmbientHum();
       this.stopStalkerVoice();
@@ -414,13 +478,16 @@ export class GameScene implements Scene {
     }
     this.syncAuthoritativeMatchState();
     this.consumeResolvedPunchResults();
+    this.consumeOpenedContainers();
     this.syncRoundResolution();
 
     this.elapsed += dt;
     this.status.ttl = Math.max(0, this.status.ttl - dt);
     this.localJoinEffectTimer = Math.max(0, this.localJoinEffectTimer - dt);
     this.lobbyExitConfirmTimer = Math.max(0, this.lobbyExitConfirmTimer - dt);
+    this.overlayNavRepeatTimer = Math.max(0, this.overlayNavRepeatTimer - dt);
     this.touch.setMenuConfirming(this.lobbyExitConfirmTimer > 0);
+    this.touch.setPrimaryLabel(this.localActiveInventoryItem() === "pistol_9mm" ? "FIRE" : "ACT");
     this.updateCombatState(dt);
     this.updateStalkerVisual(dt);
     this.updateRemotePlayerVisuals(dt);
@@ -437,15 +504,32 @@ export class GameScene implements Scene {
     if (this.debugMaskControlsEnabled && this.actions.wasPressed("toggle_darkness")) {
       this.toggleDarknessMask();
     }
-    if (this.actions.wasPressed("toggle_flashlight") || this.touch.consumeUtilityPressed()) {
-      this.toggleFlashlight();
-    }
 
-    if (this.actions.wasPressed("menu_back")) {
+    const menuBackPressed = this.actions.wasPressed("menu_back");
+    const inventoryTogglePressed = this.actions.wasPressed("toggle_inventory") || this.touch.consumeInventoryPressed();
+    const touchMenuPressed = this.touch.consumeMenuPressed();
+    const usePressed = this.actions.wasPressed("interact") || this.touch.consumeUsePressed();
+    const primaryPressed = this.actions.wasPressed("punch") || this.touch.consumePrimaryPressed();
+    const touchUtilityPressed = this.touch.consumeUtilityPressed();
+    const flashlightPressed = this.actions.wasPressed("toggle_flashlight") || touchUtilityPressed;
+    const dropPressed = this.actions.wasPressed("inventory_drop") || touchUtilityPressed;
+    const overlayInitiallyOpen = this.overlayVisible();
+
+    if (this.openedContainer) {
+      if (inventoryTogglePressed) {
+        this.closeOpenedContainer();
+        this.openInventory();
+      } else if (menuBackPressed || touchMenuPressed) {
+        this.closeOpenedContainer();
+      }
+    } else if (this.inventoryVisible) {
+      if (inventoryTogglePressed || menuBackPressed || touchMenuPressed) {
+        this.closeInventory();
+      }
+    } else if (menuBackPressed) {
       this.returnToTitle();
       return;
-    }
-    if (this.touch.consumeMenuPressed()) {
+    } else if (touchMenuPressed) {
       if (this.lobbyExitConfirmTimer > 0) {
         this.returnToTitle();
         return;
@@ -455,8 +539,14 @@ export class GameScene implements Scene {
       this.pushStatus("Tap LOBBY again to leave the public room.");
     }
 
-    const usePressed = this.actions.wasPressed("interact") || this.touch.consumeUsePressed();
-    const primaryPressed = this.actions.wasPressed("punch") || this.touch.consumePrimaryPressed();
+    if (!this.overlayVisible() && inventoryTogglePressed) {
+      this.openInventory();
+    }
+
+    if (!this.overlayVisible() && flashlightPressed) {
+      this.toggleFlashlight();
+    }
+
     if (this.escaped) {
       this.updateStalkerChaseAudio(dt, Number.POSITIVE_INFINITY);
       if (usePressed || this.actions.wasPressed("restart")) {
@@ -483,8 +573,9 @@ export class GameScene implements Scene {
     const keyboardX = this.actions.axis("move_left", "move_right");
     const keyboardY = this.actions.axis("move_up", "move_down");
     const touchAxis = this.touch.axis();
-    let moveX = keyboardX + touchAxis.x;
-    let moveY = keyboardY + touchAxis.y;
+    const overlayOpen = overlayInitiallyOpen || this.overlayVisible();
+    let moveX = overlayOpen ? 0 : keyboardX + touchAxis.x;
+    let moveY = overlayOpen ? 0 : keyboardY + touchAxis.y;
     const moveLength = Math.hypot(moveX, moveY);
     this.moveVisual = moveLength;
     if (moveLength > 1) {
@@ -509,14 +600,23 @@ export class GameScene implements Scene {
       this.stepClock = 0.08;
     }
 
-    this.syncLocalPlayerState(moveX, moveY, usePressed, primaryPressed);
+    this.syncLocalPlayerState(
+      moveX,
+      moveY,
+      overlayOpen ? false : usePressed,
+      overlayOpen ? false : primaryPressed
+    );
 
-    if (usePressed) {
-      this.handleInteraction();
-    }
+    if (overlayOpen) {
+      this.handleOverlayInput(dt, touchAxis, usePressed, primaryPressed, dropPressed);
+    } else {
+      if (usePressed) {
+        this.handleInteraction();
+      }
 
-    if (primaryPressed) {
-      this.tryPunch();
+      if (primaryPressed) {
+        this.handlePrimaryAction();
+      }
     }
 
     if (!this.escaped) {
@@ -525,8 +625,12 @@ export class GameScene implements Scene {
 
     const targetCameraX = clamp(this.player.x - this.services.renderer.width * 0.5, 0, WORLD_WIDTH - this.services.renderer.width);
     const targetCameraY = clamp(this.player.y - this.services.renderer.height * 0.5, 0, WORLD_HEIGHT - this.services.renderer.height);
-    this.cameraX = lerp(this.cameraX, targetCameraX, Math.min(1, dt * 5.5));
-    this.cameraY = lerp(this.cameraY, targetCameraY, Math.min(1, dt * 5.5));
+    this.cameraBaseX = lerp(this.cameraBaseX, targetCameraX, Math.min(1, dt * 5.5));
+    this.cameraBaseY = lerp(this.cameraBaseY, targetCameraY, Math.min(1, dt * 5.5));
+    this.cameraKickX = lerp(this.cameraKickX, 0, Math.min(1, dt * PISTOL_CAMERA_RECOVERY));
+    this.cameraKickY = lerp(this.cameraKickY, 0, Math.min(1, dt * PISTOL_CAMERA_RECOVERY));
+    this.cameraX = this.cameraBaseX + this.cameraKickX;
+    this.cameraY = this.cameraBaseY + this.cameraKickY;
   }
 
   render(_alpha: number): void {
@@ -543,6 +647,8 @@ export class GameScene implements Scene {
       this.renderDebugButton();
     }
     this.touch.render(this.services.renderer);
+    this.renderOpenedContainer();
+    this.renderInventoryPanel();
     if (this.escaped) {
       this.renderEscapeOverlay();
     } else if (this.matchResolvedOutcome === "loser") {
@@ -553,8 +659,12 @@ export class GameScene implements Scene {
   }
 
   private snapCamera(): void {
-    this.cameraX = clamp(this.player.x - this.services.renderer.width * 0.5, 0, WORLD_WIDTH - this.services.renderer.width);
-    this.cameraY = clamp(this.player.y - this.services.renderer.height * 0.5, 0, WORLD_HEIGHT - this.services.renderer.height);
+    this.cameraBaseX = clamp(this.player.x - this.services.renderer.width * 0.5, 0, WORLD_WIDTH - this.services.renderer.width);
+    this.cameraBaseY = clamp(this.player.y - this.services.renderer.height * 0.5, 0, WORLD_HEIGHT - this.services.renderer.height);
+    this.cameraKickX = 0;
+    this.cameraKickY = 0;
+    this.cameraX = this.cameraBaseX;
+    this.cameraY = this.cameraBaseY;
   }
 
   private movePlayer(dx: number, dy: number): void {
@@ -606,11 +716,18 @@ export class GameScene implements Scene {
   private updateCombatState(dt: number): void {
     this.punchTimer = Math.max(0, this.punchTimer - dt);
     this.punchCooldown = Math.max(0, this.punchCooldown - dt);
+    this.pistolCooldown = Math.max(0, this.pistolCooldown - dt);
     this.stalker.attackTimer = Math.max(0, this.stalker.attackTimer - dt);
     this.stalker.attackCooldown = Math.max(0, this.stalker.attackCooldown - dt);
     this.trainingDummyFlash = Math.max(0, this.trainingDummyFlash - dt);
     this.trainingDummyWobble = Math.max(0, this.trainingDummyWobble - dt);
     this.playerHitFlash = Math.max(0, this.playerHitFlash - dt);
+    for (const [playerId, flash] of this.muzzleFlashes.entries()) {
+      flash.timer = Math.max(0, flash.timer - dt);
+      if (flash.timer <= 0) {
+        this.muzzleFlashes.delete(playerId);
+      }
+    }
   }
 
   private updateStalkerVisual(dt: number): void {
@@ -809,6 +926,15 @@ export class GameScene implements Scene {
     }
   }
 
+  private handlePrimaryAction(): void {
+    if (this.localActiveInventoryItem() === "pistol_9mm") {
+      this.tryFirePistol();
+      return;
+    }
+
+    this.tryPunch();
+  }
+
   private tryPunch(): void {
     if (this.punchCooldown > 0 || this.punchTimer > 0) {
       return;
@@ -853,6 +979,48 @@ export class GameScene implements Scene {
         this.playSfx(this.assets?.audio.punchImpactUrl ?? null, 0.18);
       }
     }
+  }
+
+  private tryFirePistol(): void {
+    if (this.pistolCooldown > 0) {
+      return;
+    }
+
+    const inventory = this.localInventorySnapshot();
+    if (!inventory) {
+      return;
+    }
+
+    if (inventory.ammo9mmReserve <= 0) {
+      this.pushStatus("The 9mm clicks empty.");
+      return;
+    }
+
+    const facingLength = Math.hypot(this.player.facingX, this.player.facingY);
+    const facing = facingLength <= 0.001
+      ? { x: 1, y: 0 }
+      : { x: this.player.facingX / facingLength, y: this.player.facingY / facingLength };
+    const result = this.services.room.fireEquippedItem(facing);
+    if (!result.ok) {
+      this.pushStatus(result.reason ?? "The pistol refuses to fire.");
+      return;
+    }
+
+    this.player.facingX = facing.x;
+    this.player.facingY = facing.y;
+    this.pistolCooldown = PLAYER_TUNING.pistol9mm.cooldown;
+    this.triggerMuzzleFlash(this.services.room.getSnapshot().localPlayerId, facing.x, facing.y);
+    this.applyPistolRecoil(facing.x, facing.y);
+    this.playSfx(this.assets?.audio.pistolShotUrl ?? null, PLAYER_TUNING.pistol9mm.shotVolume);
+  }
+
+  private applyPistolRecoil(facingX: number, facingY: number): void {
+    const kick = PLAYER_TUNING.pistol9mm.cameraRecoil;
+    const maxKick = kick * 2.25;
+    this.cameraKickX = clamp(this.cameraKickX - facingX * kick, -maxKick, maxKick);
+    this.cameraKickY = clamp(this.cameraKickY - facingY * kick, -maxKick, maxKick);
+    this.cameraX = this.cameraBaseX + this.cameraKickX;
+    this.cameraY = this.cameraBaseY + this.cameraKickY;
   }
 
   private consumeResolvedPunchResults(): boolean {
@@ -1252,6 +1420,31 @@ export class GameScene implements Scene {
       return;
     }
 
+    if (prompt.kind === "container") {
+      const result = this.services.room.openContainer(prompt.id);
+      if (!result.ok) {
+        this.pushStatus(result.reason ?? "The container refuses to open.");
+        return;
+      }
+
+      if (result.value) {
+        this.showOpenedContainer(result.value);
+      }
+      return;
+    }
+
+    if (prompt.kind === "item") {
+      const result = this.services.room.collectLooseItem(prompt.id);
+      if (!result.ok) {
+        this.pushStatus(result.reason ?? "The item stays on the floor.");
+        return;
+      }
+
+      this.syncAuthoritativeMatchState();
+      this.pushStatus(`${prompt.label} added to your bag.`);
+      return;
+    }
+
     if (!this.exitUnlocked()) {
       this.pushStatus("The shutter is still locked into the wall.");
       return;
@@ -1299,6 +1492,32 @@ export class GameScene implements Scene {
           id: panel.id,
           label: panel.label,
           instruction: this.activatedPanels.has(panel.id) ? "Panel already active" : "Activate panel"
+        };
+      }
+    }
+
+    for (const container of SEARCHABLE_CONTAINERS) {
+      const containerDistance = distance(this.player.x, this.player.y, container.x, container.y);
+      if (containerDistance <= container.interactionRadius && containerDistance < bestDistance) {
+        bestDistance = containerDistance;
+        best = {
+          kind: "container",
+          id: container.id,
+          label: container.label,
+          instruction: "Search container"
+        };
+      }
+    }
+
+    for (const item of this.looseItems) {
+      const itemDistance = distance(this.player.x, this.player.y, item.x, item.y);
+      if (itemDistance <= 36 && itemDistance < bestDistance) {
+        bestDistance = itemDistance;
+        best = {
+          kind: "item",
+          id: item.id,
+          label: INVENTORY_ITEM_DEFINITIONS[item.type].label,
+          instruction: "Take item"
         };
       }
     }
@@ -1423,7 +1642,33 @@ export class GameScene implements Scene {
       }
     }
 
+    this.renderDecorProps();
     this.renderExitGate();
+  }
+
+  private renderDecorProps(): void {
+    const decor = this.assets?.decor;
+    if (!decor) {
+      return;
+    }
+
+    const { renderer } = this.services;
+    const { ctx } = renderer;
+
+    for (const prop of DECOR_PROPS) {
+      const image = decor[prop.assetId];
+      if (!image) {
+        continue;
+      }
+
+      const drawX = prop.x - this.cameraX - prop.width * 0.5;
+      const drawY = prop.y - this.cameraY - prop.height * (prop.anchorY ?? 0.82);
+      if (drawX > renderer.width + 40 || drawX + prop.width < -40 || drawY > renderer.height + 40 || drawY + prop.height < -40) {
+        continue;
+      }
+
+      ctx.drawImage(image, drawX, drawY, prop.width, prop.height);
+    }
   }
 
   private renderExitGate(): void {
@@ -1453,6 +1698,7 @@ export class GameScene implements Scene {
 
     this.renderTrainingDummy(pulse);
     this.renderPickups(pulse);
+    this.renderLooseItems(pulse);
 
     for (const relay of RELAYS) {
       if (this.collectedRelays.has(relay.id)) {
@@ -1470,6 +1716,7 @@ export class GameScene implements Scene {
     renderer.rect(exitX - 22, exitY - 26, 44, 52, this.exitUnlocked() ? "#9a8150" : "#4a432f");
     renderer.strokeRect(exitX - 22, exitY - 26, 44, 52, this.exitUnlocked() ? "#ffe3a3" : "#96845c", 1.5);
     renderer.circle(exitX, exitY - 8, 6, this.exitUnlocked() ? "#ffd772" : "#72654a");
+    this.renderActiveInteractionCue(pulse);
   }
 
   private renderRelayModule(relay: RelayDef, pulse: number): void {
@@ -1544,6 +1791,131 @@ export class GameScene implements Scene {
     });
   }
 
+  private renderActiveInteractionCue(pulse: number): void {
+    if (this.overlayVisible()) {
+      return;
+    }
+
+    const prompt = this.currentPrompt();
+    if (!prompt) {
+      return;
+    }
+
+    const target = this.interactionCueTarget(prompt);
+    if (!target) {
+      return;
+    }
+
+    const { renderer } = this.services;
+    const { ctx } = renderer;
+    const x = target.x - this.cameraX;
+    const y = target.y - this.cameraY;
+    const labelY = target.labelY - this.cameraY;
+    if (x < -80 || x > renderer.width + 80 || y < -90 || y > renderer.height + 90) {
+      return;
+    }
+
+    const haloAlpha = 0.2 + pulse * 0.16;
+    const shimmer = 0.5 + 0.5 * Math.sin(this.elapsed * 6.2);
+    const promptKey = this.touch.shouldRender() ? "USE" : "E";
+
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 233, 176, ${haloAlpha})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(x, y + target.radius * 0.45, target.radius * 0.96, target.radius * 0.42, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha = 0.12 + shimmer * 0.12;
+    renderer.circle(x, y, target.radius * 0.7, "rgba(255, 236, 188, 0.45)");
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 245, 214, ${0.44 + shimmer * 0.26})`;
+    ctx.lineWidth = 1.2;
+    renderer.line(x, labelY + 14, x, y - target.radius * 0.6, ctx.strokeStyle as string, 1.2);
+    renderer.line(x - 6, labelY + 8, x, labelY + 2, ctx.strokeStyle as string, 1.2);
+    renderer.line(x + 6, labelY + 8, x, labelY + 2, ctx.strokeStyle as string, 1.2);
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = "rgba(15, 13, 10, 0.72)";
+    ctx.fillRect(x - 18, labelY - 12, 36, 18);
+    ctx.strokeStyle = `rgba(242, 225, 170, ${0.56 + shimmer * 0.24})`;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x - 18, labelY - 12, 36, 18);
+    ctx.restore();
+
+    renderer.text(promptKey, x, labelY + 1, {
+      align: "center",
+      color: "#fff0b7",
+      font: "bold 12px Trebuchet MS"
+    });
+  }
+
+  private interactionCueTarget(prompt: InteractionPrompt): InteractionCueTarget | null {
+    switch (prompt.kind) {
+      case "relay": {
+        const relay = RELAYS.find((candidate) => candidate.id === prompt.id);
+        if (!relay) {
+          return null;
+        }
+        return {
+          x: relay.x,
+          y: relay.y,
+          radius: 18,
+          labelY: relay.y - 34
+        };
+      }
+      case "panel": {
+        const panel = PANELS.find((candidate) => candidate.id === prompt.id);
+        if (!panel) {
+          return null;
+        }
+        return {
+          x: panel.x,
+          y: panel.y,
+          radius: 22,
+          labelY: panel.y - 44
+        };
+      }
+      case "container": {
+        const container = SEARCHABLE_CONTAINERS.find((candidate) => candidate.id === prompt.id);
+        const prop = DECOR_PROPS.find((candidate) => candidate.id === prompt.id);
+        if (!container || !prop) {
+          return null;
+        }
+        return {
+          x: container.x,
+          y: container.y,
+          radius: Math.max(18, Math.min(prop.width, prop.height) * 0.42),
+          labelY: prop.y - prop.height * (prop.anchorY ?? 0.82) - 18
+        };
+      }
+      case "item": {
+        const item = this.looseItems.find((candidate) => candidate.id === prompt.id);
+        if (!item) {
+          return null;
+        }
+        return {
+          x: item.x,
+          y: item.y,
+          radius: 16,
+          labelY: item.y - 26
+        };
+      }
+      case "exit":
+        return {
+          x: EXIT_TERMINAL.x,
+          y: EXIT_TERMINAL.y,
+          radius: 24,
+          labelY: EXIT_TERMINAL.y - 48
+        };
+    }
+  }
+
   private renderTrainingDummy(pulse: number): void {
     const { renderer } = this.services;
     const { ctx } = renderer;
@@ -1589,10 +1961,78 @@ export class GameScene implements Scene {
     }
   }
 
+  private renderLooseItems(pulse: number): void {
+    for (const item of this.looseItems) {
+      this.renderLooseItem(item, pulse);
+    }
+  }
+
+  private renderLooseItem(item: LooseItemInstance, pulse: number): void {
+    const { renderer } = this.services;
+    const definition = INVENTORY_ITEM_DEFINITIONS[item.type];
+    const bob = Math.sin(this.elapsed * 3.1 + item.pulseOffset) * 1.6;
+    const x = item.x - this.cameraX;
+    const y = item.y - this.cameraY + bob;
+
+    if (x < -44 || x > renderer.width + 44 || y < -44 || y > renderer.height + 44) {
+      return;
+    }
+
+    renderer.circle(x, y + 11, 10, "rgba(0, 0, 0, 0.12)");
+
+    const { ctx } = renderer;
+    ctx.save();
+    ctx.globalAlpha = 0.12 + pulse * 0.08;
+    renderer.circle(x, y + 1, 13, "rgba(255, 239, 182, 0.22)");
+    ctx.restore();
+
+    const assetId = definition.assetId;
+    const image = assetId ? this.assets?.itemIcons[assetId] : null;
+    if (image) {
+      const width = item.type === "pistol_9mm" ? 24 : 20;
+      const height = item.type === "almond_milk" ? 24 : item.type === "pistol_9mm" ? 16 : 20;
+      ctx.save();
+      ctx.globalAlpha = 0.96;
+      ctx.drawImage(image, x - width * 0.5, y - height * 0.5, width, height);
+      ctx.restore();
+      return;
+    }
+
+    switch (item.type) {
+      case "clipboard_note":
+        renderer.rect(x - 8, y - 10, 16, 20, "#ece3c9");
+        renderer.strokeRect(x - 8, y - 10, 16, 20, "#7d6c50", 1);
+        renderer.rect(x - 5, y - 14, 10, 5, "#84725b");
+        renderer.line(x - 4, y - 3, x + 4, y - 3, "#776447", 1);
+        renderer.line(x - 4, y + 1, x + 4, y + 1, "#776447", 1);
+        renderer.line(x - 4, y + 5, x + 2, y + 5, "#776447", 1);
+        return;
+      case "office_badge":
+        renderer.rect(x - 8, y - 11, 16, 22, "#d6ddd8");
+        renderer.strokeRect(x - 8, y - 11, 16, 22, "#50635b", 1.2);
+        renderer.rect(x - 4, y - 7, 8, 8, "#8cb3ab");
+        renderer.line(x, y - 15, x, y - 11, "#f3ead1", 1.4);
+        return;
+      case "flashlight_cells":
+        renderer.rect(x - 10, y - 5, 8, 10, "#788d97");
+        renderer.strokeRect(x - 10, y - 5, 8, 10, "#283239", 1);
+        renderer.rect(x + 2, y - 5, 8, 10, "#788d97");
+        renderer.strokeRect(x + 2, y - 5, 8, 10, "#283239", 1);
+        renderer.rect(x - 8, y - 7, 4, 2, "#e8d798");
+        renderer.rect(x + 4, y - 7, 4, 2, "#e8d798");
+        return;
+      default:
+        renderer.rect(x - 8, y - 8, 16, 16, "#c8b07a");
+        renderer.strokeRect(x - 8, y - 8, 16, 16, "#56462b", 1);
+    }
+  }
+
   private renderPickup(pickup: PickupInstance, pulse: number): void {
     const { renderer } = this.services;
     const definition = PICKUP_DEFINITIONS[pickup.type];
     const bob = Math.sin(this.elapsed * 3.8 + pickup.pulseOffset) * 1.8;
+    const glint = 0.5 + 0.5 * Math.sin(this.elapsed * 5.8 + pickup.pulseOffset * 1.7);
+    const proximity = clamp(1 - distance(this.player.x, this.player.y, pickup.x, pickup.y) / 86, 0, 1);
     const x = pickup.x - this.cameraX;
     const y = pickup.y - this.cameraY + bob;
 
@@ -1604,9 +2044,15 @@ export class GameScene implements Scene {
 
     const { ctx } = renderer;
     ctx.save();
-    ctx.globalAlpha = 0.12 + pulse * 0.08;
-    renderer.circle(x, y + 1, 13, definition.glowColor);
+    ctx.globalAlpha = 0.14 + pulse * 0.08 + proximity * 0.16;
+    renderer.circle(x, y + 1, 13 + proximity * 4, definition.glowColor);
     ctx.restore();
+
+    const sparkleX = x + Math.cos(this.elapsed * 2.3 + pickup.pulseOffset) * 5;
+    const sparkleY = y - 8 + Math.sin(this.elapsed * 2.9 + pickup.pulseOffset) * 2;
+    const sparkleAlpha = 0.24 + glint * 0.28 + proximity * 0.14;
+    renderer.line(sparkleX - 4, sparkleY, sparkleX + 4, sparkleY, `rgba(255, 250, 236, ${sparkleAlpha})`, 1.2);
+    renderer.line(sparkleX, sparkleY - 4, sparkleX, sparkleY + 4, `rgba(255, 250, 236, ${sparkleAlpha})`, 1.2);
 
     if (pickup.type === "energy_drink") {
       renderer.rect(x - 5, y - 10, 10, 18, definition.color);
@@ -1771,6 +2217,9 @@ export class GameScene implements Scene {
       ctx.globalAlpha *= this.joinMaterializationBodyAlpha(materializeTimer);
       this.renderPlayerSpriteFrame(ctx, frameIndex, drawX, drawY, drawSize, punchStrength, this.punchArmSide);
       this.renderPunchArm(ctx, playerX, playerY, punchStrength, this.punchFacingX, this.punchFacingY, this.punchArmSide);
+      if (this.localActiveInventoryItem() === "pistol_9mm") {
+        this.renderEquippedPistol(ctx, playerX, playerY, this.player.facingX, this.player.facingY, this.muzzleFlashStrength(this.services.room.getSnapshot().localPlayerId));
+      }
       ctx.restore();
     } else {
       ctx.save();
@@ -1813,6 +2262,9 @@ export class GameScene implements Scene {
         ctx.globalAlpha *= this.joinMaterializationBodyAlpha(materializeTimer);
         this.renderPlayerSpriteFrame(ctx, frameIndex, drawX, drawY, drawSize, punchStrength, visual?.punchArmSide ?? 1);
         this.renderPunchArm(ctx, remoteX, remoteY, punchStrength, punchFacingX, punchFacingY, visual?.punchArmSide ?? 1);
+        if (this.activeInventoryItemForSnapshot(player) === "pistol_9mm") {
+          this.renderEquippedPistol(ctx, remoteX, remoteY, player.facing.x, player.facing.y, this.muzzleFlashStrength(player.id));
+        }
         ctx.restore();
       } else {
         ctx.save();
@@ -1824,6 +2276,8 @@ export class GameScene implements Scene {
   }
 
   private renderCombatOverlays(): void {
+    this.renderProjectiles();
+
     for (const player of this.remotePlayers()) {
       if (player.isDead) {
         continue;
@@ -1859,6 +2313,108 @@ export class GameScene implements Scene {
 
     this.renderFloatingDamageNumbers();
     this.renderPlayerHitFlashOverlay();
+  }
+
+  private renderProjectiles(): void {
+    const { renderer } = this.services;
+    const { ctx } = renderer;
+    for (const projectile of this.projectiles) {
+      const screenX = projectile.x - this.cameraX;
+      const screenY = projectile.y - this.cameraY;
+      if (screenX < -40 || screenX > renderer.width + 40 || screenY < -40 || screenY > renderer.height + 40) {
+        continue;
+      }
+
+      const trailX = projectile.x - projectile.facingX * PLAYER_TUNING.pistol9mm.tracerLength;
+      const trailY = projectile.y - projectile.facingY * PLAYER_TUNING.pistol9mm.tracerLength;
+      const fade = clamp(projectile.distanceRemaining / PROJECTILE_FADE_DISTANCE, 0, 1);
+      ctx.save();
+      ctx.strokeStyle = `rgba(255, 205, 92, ${0.36 + fade * 0.52})`;
+      ctx.lineWidth = 1.6;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(trailX - this.cameraX, trailY - this.cameraY);
+      ctx.lineTo(screenX, screenY);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255, 242, 186, ${0.28 + fade * 0.44})`;
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(trailX - this.cameraX, trailY - this.cameraY);
+      ctx.lineTo(screenX, screenY);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  private renderEquippedPistol(
+    ctx: CanvasRenderingContext2D,
+    playerX: number,
+    playerY: number,
+    facingX: number,
+    facingY: number,
+    flashStrength: number
+  ): void {
+    const { renderer } = this.services;
+    const facingLength = Math.hypot(facingX, facingY);
+    const dirX = facingLength <= 0.001 ? 1 : facingX / facingLength;
+    const dirY = facingLength <= 0.001 ? 0 : facingY / facingLength;
+    const sideX = -dirY;
+    const sideY = dirX;
+    const recoil = flashStrength * 3.5;
+    const handX = playerX + dirX * (7 - recoil) + sideX * 4;
+    const handY = playerY - 4 + dirY * (7 - recoil) + sideY * 2;
+    const angle = Math.atan2(dirY, dirX);
+    const pistolImage = this.assets?.itemIcons["pistol-9mm"] ?? null;
+
+    ctx.save();
+    ctx.translate(handX, handY);
+    ctx.rotate(angle);
+    if (pistolImage) {
+      ctx.globalAlpha = 0.96;
+      ctx.drawImage(pistolImage, -8, -5, 18, 11);
+    } else {
+      ctx.fillStyle = "#717b82";
+      ctx.fillRect(-7, -3, 14, 6);
+      ctx.fillStyle = "#434b50";
+      ctx.fillRect(-2, 1, 5, 4);
+    }
+    ctx.restore();
+
+    if (flashStrength <= 0.001) {
+      return;
+    }
+
+    const muzzleX = handX + dirX * 10;
+    const muzzleY = handY + dirY * 10;
+    ctx.save();
+    ctx.globalAlpha = 0.3 + flashStrength * 0.44;
+    renderer.circle(muzzleX, muzzleY, 6 + flashStrength * 4, "rgba(255, 196, 94, 0.75)");
+    ctx.restore();
+    renderer.line(
+      muzzleX,
+      muzzleY,
+      muzzleX + dirX * (10 + flashStrength * 6),
+      muzzleY + dirY * (10 + flashStrength * 6),
+      `rgba(255, 240, 188, ${0.56 + flashStrength * 0.34})`,
+      1.6
+    );
+  }
+
+  private muzzleFlashStrength(playerId: string): number {
+    const flash = this.muzzleFlashes.get(playerId);
+    if (!flash) {
+      return 0;
+    }
+
+    return clamp(flash.timer / PLAYER_TUNING.pistol9mm.muzzleFlashDuration, 0, 1);
+  }
+
+  private activeInventoryItemForSnapshot(player: MatchPlayerSnapshot): InventoryItemType | null {
+    if (player.inventory.activeSlotIndex === null) {
+      return null;
+    }
+
+    return player.inventory.slots[player.inventory.activeSlotIndex] ?? null;
   }
 
   private renderActorName(x: number, y: number, name: string, health: number, maxHealth: number): void {
@@ -2283,6 +2839,16 @@ export class GameScene implements Scene {
       return;
     }
     this.mixer.playOneShot(url, volume);
+  }
+
+  private playSpatialSfx(url: string | null, worldX: number, worldY: number, volume: number, maxDistance: number): void {
+    const delta = distance(this.player.x, this.player.y, worldX, worldY);
+    const falloff = clamp(1 - delta / maxDistance, 0, 1);
+    if (falloff <= 0.01) {
+      return;
+    }
+
+    this.playSfx(url, volume * falloff);
   }
 
   private stopAmbientHum(): void {
@@ -2790,7 +3356,7 @@ export class GameScene implements Scene {
 
   private renderHud(): void {
     const { renderer } = this.services;
-    const prompt = this.currentPrompt();
+    const prompt = this.overlayVisible() ? null : this.currentPrompt();
     const roomSnapshot = this.services.room.getSnapshot();
     const topFont = this.touch.shouldRender() ? "bold 12px Trebuchet MS" : "bold 13px Trebuchet MS";
     const topSubFont = "12px Trebuchet MS";
@@ -2837,6 +3403,179 @@ export class GameScene implements Scene {
     }
   }
 
+  private renderOpenedContainer(): void {
+    if (!this.openedContainer) {
+      return;
+    }
+
+    const { renderer } = this.services;
+    const { ctx } = renderer;
+    const inventory = this.localInventorySnapshot();
+    const lines = this.openedContainer.items.length > 0
+      ? this.openedContainer.items.map((item) => CONTAINER_ITEM_DEFINITIONS[item].label)
+      : ["Nothing but dust and old paperwork."];
+    const panel = this.openedContainerPanelRect(lines.length);
+    const { x, y, width, height } = panel;
+    const itemCountText = this.openedContainer.itemCount === 0
+      ? "Empty"
+      : `${this.openedContainer.itemCount} item${this.openedContainer.itemCount === 1 ? "" : "s"}`;
+    const bagCount = inventory?.slots.filter((slot) => slot !== null).length ?? 0;
+    const closeButton = this.overlayCloseButtonRect(panel);
+    const takeButton = this.overlayFooterButtonRect(panel, 0, 3);
+    const takeAllButton = this.overlayFooterButtonRect(panel, 1, 3);
+    const bagButton = this.overlayFooterButtonRect(panel, 2, 3);
+
+    ctx.save();
+    ctx.fillStyle = "rgba(7, 6, 4, 0.34)";
+    ctx.fillRect(0, 0, renderer.width, renderer.height);
+    ctx.fillStyle = "rgba(18, 16, 11, 0.82)";
+    ctx.fillRect(x, y, width, height);
+    ctx.strokeStyle = "rgba(214, 196, 132, 0.72)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, width, height);
+    ctx.strokeStyle = "rgba(107, 97, 63, 0.9)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 10, y + 48, width - 20, height - 118);
+    ctx.restore();
+
+    renderer.text(this.openedContainer.label, renderer.width * 0.5, y + 28, {
+      align: "center",
+      color: "#f6ebbd",
+      font: "bold 22px Trebuchet MS"
+    });
+    renderer.text(itemCountText, renderer.width * 0.5, y + 52, {
+      align: "center",
+      color: "#d7e7ec",
+      font: "bold 14px Trebuchet MS"
+    });
+    renderer.text(`Bag ${bagCount}/${inventory?.capacity ?? 0}`, renderer.width * 0.5, y + 72, {
+      align: "center",
+      color: "#c8d9dc",
+      font: "13px Trebuchet MS"
+    });
+
+    for (const [index, line] of lines.entries()) {
+      const rowY = y + 102 + index * 24;
+      if (this.openedContainer.items.length > 0 && index === this.containerSelectedItemIndex) {
+        ctx.save();
+        ctx.fillStyle = "rgba(255, 240, 181, 0.10)";
+        ctx.fillRect(x + 16, rowY - 14, width - 32, 20);
+        ctx.strokeStyle = "rgba(255, 231, 162, 0.42)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 16, rowY - 14, width - 32, 20);
+        ctx.restore();
+      }
+
+      renderer.text(`${this.openedContainer.items.length > 0 && index === this.containerSelectedItemIndex ? "> " : "- "}${line}`, x + 26, rowY, {
+        align: "left",
+        color: this.openedContainer.items.length > 0 && index === this.containerSelectedItemIndex ? "#fff1ba" : "#efe2a8",
+        font: "15px Trebuchet MS"
+      });
+    }
+
+    renderer.text("Select a row, then use the buttons below.", renderer.width * 0.5, y + height - 62, {
+      align: "center",
+      color: "#c8cfd3",
+      font: "12px Trebuchet MS"
+    });
+
+    this.renderOverlayButton(closeButton, "CLOSE", "danger");
+    this.renderOverlayButton(takeButton, "TAKE", "sand", this.openedContainer.items.length <= 0);
+    this.renderOverlayButton(takeAllButton, "TAKE ALL", "cool", this.openedContainer.items.length <= 0);
+    this.renderOverlayButton(bagButton, "BAG", "muted");
+  }
+
+  private renderInventoryPanel(): void {
+    if (!this.inventoryVisible) {
+      return;
+    }
+
+    const inventory = this.localInventorySnapshot();
+    if (!inventory) {
+      return;
+    }
+
+    const { renderer } = this.services;
+    const { ctx } = renderer;
+    const panel = this.inventoryPanelRect(inventory.capacity);
+    const { x, y, width, height } = panel;
+    const activeItem = inventory.activeSlotIndex === null ? null : (inventory.slots[inventory.activeSlotIndex] ?? null);
+    const selectedItem = inventory.slots[this.inventorySelectedSlotIndex] ?? null;
+    const closeButton = this.overlayCloseButtonRect(panel);
+    const useButton = this.overlayFooterButtonRect(panel, 0, 3);
+    const equipButton = this.overlayFooterButtonRect(panel, 1, 3);
+    const dropButton = this.overlayFooterButtonRect(panel, 2, 3);
+    const equipEnabled = selectedItem !== null && canEquipInventoryItem(selectedItem);
+    const equipLabel = equipEnabled && inventory.activeSlotIndex === this.inventorySelectedSlotIndex ? "UNEQUIP" : "EQUIP";
+    const useEnabled = selectedItem !== null && canUseInventoryItem(selectedItem);
+    const dropEnabled = selectedItem !== null;
+
+    ctx.save();
+    ctx.fillStyle = "rgba(7, 6, 4, 0.34)";
+    ctx.fillRect(0, 0, renderer.width, renderer.height);
+    ctx.fillStyle = "rgba(16, 15, 11, 0.84)";
+    ctx.fillRect(x, y, width, height);
+    ctx.strokeStyle = "rgba(214, 196, 132, 0.72)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, width, height);
+    ctx.restore();
+
+    renderer.text("Field Bag", renderer.width * 0.5, y + 28, {
+      align: "center",
+      color: "#f6ebbd",
+      font: "bold 22px Trebuchet MS"
+    });
+    renderer.text(
+      activeItem ? `Active: ${INVENTORY_ITEM_DEFINITIONS[activeItem].label}` : "Active: Empty hands",
+      renderer.width * 0.5,
+      y + 52,
+      {
+        align: "center",
+        color: "#d7e7ec",
+        font: "13px Trebuchet MS"
+      }
+    );
+    renderer.text(`9mm reserve: ${inventory.ammo9mmReserve}`, renderer.width * 0.5, y + 70, {
+      align: "center",
+      color: "#f1ddb2",
+      font: "12px Trebuchet MS"
+    });
+
+    for (let index = 0; index < inventory.capacity; index += 1) {
+      const rowY = y + 104 + index * 26;
+      const item = inventory.slots[index];
+      const isActive = inventory.activeSlotIndex === index;
+      const isSelected = this.inventorySelectedSlotIndex === index;
+      ctx.save();
+      ctx.fillStyle = isSelected ? "rgba(255, 240, 181, 0.10)" : "rgba(255, 255, 255, 0.02)";
+      ctx.fillRect(x + 18, rowY - 15, width - 36, 20);
+      ctx.strokeStyle = isSelected ? "rgba(255, 231, 162, 0.42)" : "rgba(118, 104, 69, 0.24)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 18, rowY - 15, width - 36, 20);
+      ctx.restore();
+
+      const slotLabel = item ? INVENTORY_ITEM_DEFINITIONS[item].label : "Empty";
+      const prefix = isSelected ? "> " : "  ";
+      const suffix = isActive ? "  [ACTIVE]" : "";
+      renderer.text(`${prefix}${index + 1}. ${slotLabel}${suffix}`, x + 28, rowY, {
+        align: "left",
+        color: isSelected ? "#fff1ba" : item ? "#efe2a8" : "#857a59",
+        font: "15px Trebuchet MS"
+      });
+    }
+
+    renderer.text("Select a slot, then tap or click the action you want.", renderer.width * 0.5, y + height - 62, {
+      align: "center",
+      color: "#c8cfd3",
+      font: "12px Trebuchet MS"
+    });
+
+    this.renderOverlayButton(closeButton, "CLOSE", "danger");
+    this.renderOverlayButton(useButton, "USE", "sand", !useEnabled);
+    this.renderOverlayButton(equipButton, equipLabel, "cool", !equipEnabled);
+    this.renderOverlayButton(dropButton, "DROP", "danger", !dropEnabled);
+  }
+
   private renderTopHudLine(top: number, text: string, color: string, font: string): void {
     const { renderer } = this.services;
     const { ctx } = renderer;
@@ -2860,6 +3599,7 @@ export class GameScene implements Scene {
   }
 
   private buildTopSummaryLine(roomSnapshot: PublicRoomSnapshot): string {
+    const inventory = this.localInventorySnapshot();
     const parts = [
       this.currentArea()?.label ?? "Unknown area",
       `Next ${this.topObjectiveShortLabel()}`,
@@ -2881,6 +3621,20 @@ export class GameScene implements Scene {
       parts.push(`Boost ${this.energyDrinkTimer.toFixed(1)}s`);
     }
 
+    if (inventory) {
+      const bagCount = inventory.slots.filter((slot) => slot !== null).length;
+      parts.push(`Bag ${bagCount}/${inventory.capacity}`);
+      if (inventory.ammo9mmReserve > 0) {
+        parts.push(`9mm ${inventory.ammo9mmReserve}`);
+      }
+      if (inventory.activeSlotIndex !== null) {
+        const activeItem = inventory.slots[inventory.activeSlotIndex];
+        if (activeItem) {
+          parts.push(`Active ${INVENTORY_ITEM_DEFINITIONS[activeItem].shortLabel}`);
+        }
+      }
+    }
+
     if (this.loadingError) {
       parts.push("Audio degraded");
     }
@@ -2891,17 +3645,20 @@ export class GameScene implements Scene {
   private buildControlsSummaryLine(): string {
     const parts = this.touch.shouldRender()
       ? [
-          "Touch move",
+          "Drag move",
           "USE interact",
-          "ACT primary",
+          this.localActiveInventoryItem() === "pistol_9mm" ? "FIRE shoot" : "ACT primary",
           "UTIL flashlight",
+          "BAG inventory",
           "LOBBY top-right"
         ]
       : [
-          "WASD move",
+          "WASD / mouse-drag move",
           "E use",
-          "J/X act",
-          "F flashlight"
+          this.localActiveInventoryItem() === "pistol_9mm" ? "J/X fire" : "J/X act",
+          "F flashlight",
+          "I/Tab bag",
+          "Q drop"
         ];
 
     parts.push("H controls");
@@ -2947,6 +3704,10 @@ export class GameScene implements Scene {
     return this.services.room.getMatchSnapshot();
   }
 
+  private localInventorySnapshot(): MatchInventorySnapshot | null {
+    return this.services.room.getLocalInventorySnapshot();
+  }
+
   private remotePlayers(): readonly MatchPlayerSnapshot[] {
     const roomSnapshot = this.services.room.getSnapshot();
     return this.currentMatchSnapshot()?.players.filter((player) => player.id !== roomSnapshot.localPlayerId) ?? [];
@@ -2957,6 +3718,7 @@ export class GameScene implements Scene {
     if (!matchSnapshot) {
       this.lastAppliedMatchSnapshot = null;
       this.remotePlayerVisuals.clear();
+      this.closeOverlayPanels();
       return;
     }
 
@@ -2968,7 +3730,480 @@ export class GameScene implements Scene {
     this.syncObjectiveSet(this.collectedRelays, matchSnapshot.objectives.restoredRelayIds);
     this.syncObjectiveSet(this.activatedPanels, matchSnapshot.objectives.activatedPanelIds);
     this.syncPickupInstances(matchSnapshot.pickups);
+    this.syncLooseItemInstances(matchSnapshot.looseItems);
+    this.syncProjectileInstances(matchSnapshot.projectiles);
     this.applyAuthoritativePrimaryStalker(matchSnapshot.stalkers[0] ?? null);
+  }
+
+  private consumeOpenedContainers(): void {
+    const opened = this.services.room.consumeOpenedContainers();
+    const latest = opened[opened.length - 1];
+    if (!latest) {
+      return;
+    }
+
+    this.showOpenedContainer(latest);
+  }
+
+  private showOpenedContainer(container: MatchOpenedContainerSnapshot): void {
+    if (this.sameOpenedContainer(this.openedContainer, container)) {
+      return;
+    }
+
+    this.openedContainer = container;
+    this.inventoryVisible = false;
+    this.containerSelectedItemIndex = clamp(this.containerSelectedItemIndex, 0, Math.max(container.items.length - 1, 0));
+    if (container.itemCount <= 0) {
+      this.pushStatus(`${container.label} is empty.`);
+      return;
+    }
+
+    const noun = container.itemCount === 1 ? "item" : "items";
+    this.pushStatus(`${container.label} holds ${container.itemCount} ${noun}.`);
+  }
+
+  private sameOpenedContainer(
+    left: MatchOpenedContainerSnapshot | null,
+    right: MatchOpenedContainerSnapshot | null
+  ): boolean {
+    if (!left || !right) {
+      return left === right;
+    }
+
+    if (left.id !== right.id || left.itemCount !== right.itemCount || left.items.length !== right.items.length) {
+      return false;
+    }
+
+    return left.items.every((item, index) => item === right.items[index]);
+  }
+
+  private closeOpenedContainer(): void {
+    this.openedContainer = null;
+    this.containerSelectedItemIndex = 0;
+  }
+
+  private openInventory(): void {
+    this.inventoryVisible = true;
+    this.closeOpenedContainer();
+    const inventory = this.localInventorySnapshot();
+    const maxIndex = Math.max((inventory?.capacity ?? 1) - 1, 0);
+    this.inventorySelectedSlotIndex = clamp(this.inventorySelectedSlotIndex, 0, maxIndex);
+  }
+
+  private closeInventory(): void {
+    this.inventoryVisible = false;
+  }
+
+  private closeOverlayPanels(): void {
+    this.closeOpenedContainer();
+    this.closeInventory();
+  }
+
+  private handleOverlayPointerDown(point: ScreenPoint): boolean {
+    if (this.openedContainer) {
+      return this.handleOpenedContainerPointerDown(point);
+    }
+
+    if (this.inventoryVisible) {
+      return this.handleInventoryPointerDown(point);
+    }
+
+    return false;
+  }
+
+  private handleOpenedContainerPointerDown(point: ScreenPoint): boolean {
+    if (!this.openedContainer) {
+      return false;
+    }
+
+    const panel = this.openedContainerPanelRect(this.openedContainer.items.length);
+    if (!rectContainsPoint(panel, point.x, point.y)) {
+      this.closeOpenedContainer();
+      return true;
+    }
+
+    if (rectContainsPoint(this.overlayCloseButtonRect(panel), point.x, point.y)) {
+      this.closeOpenedContainer();
+      return true;
+    }
+
+    if (rectContainsPoint(this.overlayFooterButtonRect(panel, 0, 3), point.x, point.y)) {
+      this.takeSelectedContainerItem();
+      return true;
+    }
+
+    if (rectContainsPoint(this.overlayFooterButtonRect(panel, 1, 3), point.x, point.y)) {
+      this.takeAllOpenedContainerItems();
+      return true;
+    }
+
+    if (rectContainsPoint(this.overlayFooterButtonRect(panel, 2, 3), point.x, point.y)) {
+      this.closeOpenedContainer();
+      this.openInventory();
+      return true;
+    }
+
+    for (let index = 0; index < this.openedContainer.items.length; index += 1) {
+      if (rectContainsPoint(this.openedContainerRowRect(panel, index), point.x, point.y)) {
+        this.containerSelectedItemIndex = index;
+        return true;
+      }
+    }
+
+    return true;
+  }
+
+  private handleInventoryPointerDown(point: ScreenPoint): boolean {
+    const inventory = this.localInventorySnapshot();
+    if (!inventory) {
+      return false;
+    }
+
+    const panel = this.inventoryPanelRect(inventory.capacity);
+    if (!rectContainsPoint(panel, point.x, point.y)) {
+      this.closeInventory();
+      return true;
+    }
+
+    if (rectContainsPoint(this.overlayCloseButtonRect(panel), point.x, point.y)) {
+      this.closeInventory();
+      return true;
+    }
+
+    if (rectContainsPoint(this.overlayFooterButtonRect(panel, 0, 3), point.x, point.y)) {
+      const selectedItem = inventory.slots[this.inventorySelectedSlotIndex];
+      if (selectedItem && canUseInventoryItem(selectedItem)) {
+        this.useSelectedInventoryItem();
+      }
+      return true;
+    }
+
+    if (rectContainsPoint(this.overlayFooterButtonRect(panel, 1, 3), point.x, point.y)) {
+      const selectedItem = inventory.slots[this.inventorySelectedSlotIndex];
+      if (selectedItem && canEquipInventoryItem(selectedItem)) {
+        this.toggleEquipSelectedInventoryItem();
+      }
+      return true;
+    }
+
+    if (rectContainsPoint(this.overlayFooterButtonRect(panel, 2, 3), point.x, point.y)) {
+      if (inventory.slots[this.inventorySelectedSlotIndex]) {
+        this.dropSelectedInventoryItem();
+      }
+      return true;
+    }
+
+    for (let index = 0; index < inventory.capacity; index += 1) {
+      if (rectContainsPoint(this.inventoryRowRect(panel, index), point.x, point.y)) {
+        this.inventorySelectedSlotIndex = index;
+        return true;
+      }
+    }
+
+    return true;
+  }
+
+  private openedContainerPanelRect(itemCount: number): Rect {
+    const { renderer } = this.services;
+    const width = Math.min(renderer.width - 44, 380);
+    const height = 192 + Math.max(itemCount, 1) * 24;
+    return {
+      x: renderer.width * 0.5 - width * 0.5,
+      y: renderer.height * 0.5 - height * 0.5,
+      width,
+      height
+    };
+  }
+
+  private inventoryPanelRect(capacity: number): Rect {
+    const { renderer } = this.services;
+    const width = Math.min(renderer.width - 40, 420);
+    const height = 230 + capacity * 26;
+    return {
+      x: renderer.width * 0.5 - width * 0.5,
+      y: renderer.height * 0.5 - height * 0.5,
+      width,
+      height
+    };
+  }
+
+  private overlayCloseButtonRect(panel: Rect): Rect {
+    return {
+      x: panel.x + panel.width - 92,
+      y: panel.y + 12,
+      width: 76,
+      height: 28
+    };
+  }
+
+  private overlayFooterButtonRect(panel: Rect, index: number, total: number): Rect {
+    const gap = 10;
+    const width = Math.floor((panel.width - 32 - gap * (total - 1)) / total);
+    return {
+      x: panel.x + 16 + index * (width + gap),
+      y: panel.y + panel.height - 46,
+      width,
+      height: 30
+    };
+  }
+
+  private openedContainerRowRect(panel: Rect, index: number): Rect {
+    return {
+      x: panel.x + 16,
+      y: panel.y + 88 + index * 24,
+      width: panel.width - 32,
+      height: 20
+    };
+  }
+
+  private inventoryRowRect(panel: Rect, index: number): Rect {
+    return {
+      x: panel.x + 18,
+      y: panel.y + 89 + index * 26,
+      width: panel.width - 36,
+      height: 20
+    };
+  }
+
+  private renderOverlayButton(
+    rect: Rect,
+    label: string,
+    tone: "sand" | "cool" | "danger" | "muted",
+    disabled = false
+  ): void {
+    const { renderer } = this.services;
+    const { ctx } = renderer;
+    const fill = disabled
+      ? "rgba(42, 40, 32, 0.56)"
+      : tone === "sand"
+        ? "rgba(122, 100, 43, 0.72)"
+        : tone === "cool"
+          ? "rgba(40, 79, 92, 0.72)"
+          : tone === "danger"
+            ? "rgba(112, 46, 39, 0.76)"
+            : "rgba(56, 55, 44, 0.7)";
+    const stroke = disabled
+      ? "rgba(146, 139, 112, 0.28)"
+      : tone === "sand"
+        ? "rgba(255, 230, 163, 0.52)"
+        : tone === "cool"
+          ? "rgba(174, 237, 255, 0.48)"
+          : tone === "danger"
+            ? "rgba(255, 191, 181, 0.56)"
+            : "rgba(212, 208, 190, 0.36)";
+    const color = disabled
+      ? "#8b8368"
+      : tone === "cool"
+        ? "#d8f7ff"
+        : tone === "danger"
+          ? "#ffe3dc"
+          : "#fff0bb";
+
+    ctx.save();
+    ctx.fillStyle = fill;
+    ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+    ctx.restore();
+
+    renderer.text(label, rect.x + rect.width * 0.5, rect.y + 20, {
+      align: "center",
+      color,
+      font: "bold 13px Trebuchet MS"
+    });
+  }
+
+  private overlayVisible(): boolean {
+    return this.openedContainer !== null || this.inventoryVisible;
+  }
+
+  private takeSelectedContainerItem(): void {
+    if (!this.openedContainer || this.openedContainer.items.length <= 0) {
+      return;
+    }
+
+    const result = this.services.room.takeContainerItem(this.openedContainer.id, this.containerSelectedItemIndex);
+    if (!result.ok) {
+      this.pushStatus(result.reason ?? "Nothing comes out of the container.");
+      return;
+    }
+
+    if (result.value) {
+      this.showOpenedContainer(result.value);
+    }
+  }
+
+  private takeAllOpenedContainerItems(): void {
+    if (!this.openedContainer || this.openedContainer.items.length <= 0) {
+      return;
+    }
+
+    const result = this.services.room.takeAllContainerItems(this.openedContainer.id);
+    if (!result.ok) {
+      this.pushStatus(result.reason ?? "Your bag cannot take anything else.");
+      return;
+    }
+
+    if (result.value) {
+      this.showOpenedContainer(result.value);
+    }
+  }
+
+  private useSelectedInventoryItem(): void {
+    const inventory = this.localInventorySnapshot();
+    if (!inventory) {
+      return;
+    }
+
+    const slotItem = inventory.slots[this.inventorySelectedSlotIndex];
+    const result = this.services.room.useInventorySlot(this.inventorySelectedSlotIndex);
+    if (!result.ok) {
+      this.pushStatus(result.reason ?? "That item will not respond.");
+      return;
+    }
+
+    if (!slotItem) {
+      return;
+    }
+
+    switch (slotItem) {
+      case "almond_milk":
+        this.pushStatus("Almond milk steadies you for a moment.");
+        break;
+      case "ration_can":
+        this.pushStatus("You choke down the ration and keep moving.");
+        break;
+      case "med_case":
+        this.pushStatus("You patch your suit and seal the hit.");
+        break;
+      case "ammo_box_9mm":
+        this.pushStatus(`Loaded ${PLAYER_TUNING.pistol9mm.ammoPerBox} rounds into your 9mm reserve.`);
+        break;
+      case "pistol_9mm":
+        this.pushStatus("9mm pistol set ready.");
+        break;
+      case "clipboard_note":
+        this.pushStatus("The note is mostly complaints and missing names.");
+        break;
+      case "office_badge":
+        this.pushStatus("A badge from someone who never clocked out.");
+        break;
+    }
+  }
+
+  private toggleEquipSelectedInventoryItem(): void {
+    const inventory = this.localInventorySnapshot();
+    if (!inventory) {
+      return;
+    }
+
+    const slotItem = inventory.slots[this.inventorySelectedSlotIndex];
+    if (!slotItem || !canEquipInventoryItem(slotItem)) {
+      return;
+    }
+
+    const result = this.services.room.setActiveInventorySlot(this.inventorySelectedSlotIndex);
+    if (!result.ok) {
+      this.pushStatus(result.reason ?? "You cannot equip that.");
+      return;
+    }
+
+    const nextInventory = this.localInventorySnapshot();
+    const isActive = nextInventory?.activeSlotIndex === this.inventorySelectedSlotIndex;
+    this.pushStatus(isActive ? `${INVENTORY_ITEM_DEFINITIONS[slotItem].label} equipped.` : `${INVENTORY_ITEM_DEFINITIONS[slotItem].label} unequipped.`);
+  }
+
+  private dropSelectedInventoryItem(): void {
+    const inventory = this.localInventorySnapshot();
+    if (!inventory) {
+      return;
+    }
+
+    const slotItem = inventory.slots[this.inventorySelectedSlotIndex];
+    const result = this.services.room.dropInventorySlot(this.inventorySelectedSlotIndex);
+    if (!result.ok) {
+      this.pushStatus(result.reason ?? "There is nothing to drop.");
+      return;
+    }
+
+    if (slotItem) {
+      this.pushStatus(`${INVENTORY_ITEM_DEFINITIONS[slotItem].label} dropped.`);
+    }
+  }
+
+  private handleOverlayInput(
+    dt: number,
+    touchAxis: Point,
+    usePressed: boolean,
+    primaryPressed: boolean,
+    dropPressed: boolean
+  ): void {
+    const navStep = this.overlayNavigationStep(dt, touchAxis);
+    if (this.openedContainer) {
+      if (navStep !== 0 && this.openedContainer.items.length > 0) {
+        this.containerSelectedItemIndex = clamp(
+          this.containerSelectedItemIndex + navStep,
+          0,
+          Math.max(this.openedContainer.items.length - 1, 0)
+        );
+      }
+
+      if (usePressed && this.openedContainer.items.length > 0) {
+        this.takeSelectedContainerItem();
+      }
+
+      if (primaryPressed && this.openedContainer.items.length > 0) {
+        this.takeAllOpenedContainerItems();
+      }
+      return;
+    }
+
+    const inventory = this.localInventorySnapshot();
+    if (!inventory) {
+      return;
+    }
+
+    if (navStep !== 0) {
+      this.inventorySelectedSlotIndex = clamp(this.inventorySelectedSlotIndex + navStep, 0, Math.max(inventory.capacity - 1, 0));
+    }
+
+    if (usePressed) {
+      this.useSelectedInventoryItem();
+    }
+
+    if (primaryPressed) {
+      this.toggleEquipSelectedInventoryItem();
+    }
+
+    if (dropPressed) {
+      this.dropSelectedInventoryItem();
+    }
+  }
+
+  private overlayNavigationStep(_dt: number, touchAxis: Point): -1 | 0 | 1 {
+    const keyboardUp = this.actions.wasPressed("move_up");
+    const keyboardDown = this.actions.wasPressed("move_down");
+    if (keyboardUp) {
+      this.overlayNavRepeatTimer = 0.14;
+      return -1;
+    }
+    if (keyboardDown) {
+      this.overlayNavRepeatTimer = 0.14;
+      return 1;
+    }
+
+    if (Math.abs(touchAxis.y) < 0.45) {
+      this.overlayNavRepeatTimer = 0;
+      return 0;
+    }
+
+    if (this.overlayNavRepeatTimer > 0) {
+      return 0;
+    }
+
+    this.overlayNavRepeatTimer = 0.18;
+    return touchAxis.y < 0 ? -1 : 1;
   }
 
   private syncObjectiveSet(target: Set<string>, ids: readonly string[]): void {
@@ -2998,6 +4233,78 @@ export class GameScene implements Scene {
         blockStatusCooldown: existing?.blockStatusCooldown ?? 0
       });
     }
+  }
+
+  private syncLooseItemInstances(items: readonly MatchLooseItemSnapshot[]): void {
+    const existingById = new Map(this.looseItems.map((item) => [item.id, item]));
+    this.looseItems.length = 0;
+
+    for (const item of items) {
+      if (item.collected) {
+        continue;
+      }
+
+      const existing = existingById.get(item.id);
+      this.looseItems.push({
+        id: item.id,
+        type: item.type,
+        x: item.x,
+        y: item.y,
+        pulseOffset: existing?.pulseOffset ?? Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  private syncProjectileInstances(projectiles: readonly MatchProjectileSnapshot[]): void {
+    const existingById = new Map(this.projectiles.map((projectile) => [projectile.id, projectile]));
+    const localPlayerId = this.services.room.getSnapshot().localPlayerId;
+    this.projectiles.length = 0;
+
+    for (const projectile of projectiles) {
+      const existing = existingById.get(projectile.id);
+      this.projectiles.push({
+        id: projectile.id,
+        ownerId: projectile.ownerId,
+        x: projectile.x,
+        y: projectile.y,
+        previousX: existing?.x ?? projectile.x - projectile.facing.x * PLAYER_TUNING.pistol9mm.tracerLength,
+        previousY: existing?.y ?? projectile.y - projectile.facing.y * PLAYER_TUNING.pistol9mm.tracerLength,
+        facingX: projectile.facing.x,
+        facingY: projectile.facing.y,
+        distanceRemaining: projectile.distanceRemaining,
+        maxDistance: projectile.maxDistance
+      });
+
+      if (!existing) {
+        this.triggerMuzzleFlash(projectile.ownerId, projectile.facing.x, projectile.facing.y);
+        if (projectile.ownerId !== localPlayerId) {
+          this.playSpatialSfx(
+            this.assets?.audio.pistolShotUrl ?? null,
+            projectile.x,
+            projectile.y,
+            PLAYER_TUNING.pistol9mm.remoteShotVolume,
+            PLAYER_TUNING.pistol9mm.soundRange
+          );
+        }
+      }
+    }
+  }
+
+  private triggerMuzzleFlash(playerId: string, facingX: number, facingY: number): void {
+    this.muzzleFlashes.set(playerId, {
+      timer: PLAYER_TUNING.pistol9mm.muzzleFlashDuration,
+      facingX,
+      facingY
+    });
+  }
+
+  private localActiveInventoryItem(): InventoryItemType | null {
+    const inventory = this.localInventorySnapshot();
+    if (!inventory || inventory.activeSlotIndex === null) {
+      return null;
+    }
+
+    return inventory.slots[inventory.activeSlotIndex] ?? null;
   }
 
   private currentPrimaryStalkerSnapshot(): MatchStalkerSnapshot | null {
@@ -3053,6 +4360,7 @@ export class GameScene implements Scene {
     this.player.maxHealth = snapshot.maxHealth;
     this.energyDrinkTimer = (snapshot.speedBoostTimeRemainingMs ?? 0) / 1000;
     if (!wasDead && snapshot.health < previousHealth) {
+      this.closeOverlayPanels();
       const damage = previousHealth - snapshot.health;
       this.playerHitFlash = Math.max(this.playerHitFlash, 0.26);
       this.spawnDamageNumber(this.player.x, this.player.y - 40, `-${damage}`, DAMAGE_TEXT_RED, this.player.x, this.player.y - 10, 16);

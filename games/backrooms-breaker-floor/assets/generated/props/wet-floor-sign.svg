@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="96" viewBox="0 0 64 96">
+  <defs>
+    <linearGradient id="signFace" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f2d771"/>
+      <stop offset="100%" stop-color="#b5861d"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="32" cy="82" rx="11" ry="5" fill="#000000" opacity="0.14"/>
+
+  <g stroke-linejoin="round">
+    <path d="M24 24 L36 20 L42 24 L30 28 Z" fill="#fdeaa4" stroke="#775819" stroke-width="1.1"/>
+    <path d="M24 24 L24 63 L30 68 L30 28 Z" fill="#cc9a2c" stroke="#775819" stroke-width="1.2"/>
+    <path d="M30 28 L42 24 L42 68 L30 72 Z" fill="url(#signFace)" stroke="#775819" stroke-width="1.2"/>
+
+    <path d="M42 24 L46 22 L46 66 L42 68 Z" fill="#e5c04f" stroke="#775819" stroke-width="1"/>
+    <path d="M30 72 L34 80" stroke="#8d6b22" stroke-width="2" stroke-linecap="round"/>
+    <path d="M42 68 L38 80" stroke="#8d6b22" stroke-width="2" stroke-linecap="round"/>
+
+    <path d="M33 39 L37 33 L39 38 L36 45" fill="none" stroke="#5d430e" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="35" cy="31" r="2.2" fill="#5d430e"/>
+  </g>
+</svg>

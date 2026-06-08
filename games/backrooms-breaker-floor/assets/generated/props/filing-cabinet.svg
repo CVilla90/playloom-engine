@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="84" height="96" viewBox="0 0 84 96">
+  <defs>
+    <linearGradient id="cabinetFront" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#b4a387"/>
+      <stop offset="100%" stop-color="#776754"/>
+    </linearGradient>
+    <linearGradient id="cabinetTop" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#d5c5a5"/>
+      <stop offset="100%" stop-color="#9f8d70"/>
+    </linearGradient>
+    <linearGradient id="cabinetSide" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#8f7c65"/>
+      <stop offset="100%" stop-color="#5e513f"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="42" cy="82" rx="22" ry="7" fill="#000000" opacity="0.16"/>
+
+  <g stroke="#4a3f31" stroke-linejoin="round">
+    <path d="M24 22 L52 18 L60 24 L32 28 Z" fill="url(#cabinetTop)" stroke-width="1.3"/>
+    <path d="M24 22 L24 64 L32 70 L32 28 Z" fill="url(#cabinetSide)" stroke-width="1.3"/>
+    <path d="M32 28 L60 24 L60 66 L32 70 Z" fill="url(#cabinetFront)" stroke-width="1.4"/>
+
+    <line x1="32" y1="48" x2="60" y2="44" stroke="#655744" stroke-width="1.2"/>
+    <rect x="40" y="34.5" width="12" height="5" rx="1.5" fill="#e9debe" stroke="#5b5040" stroke-width="1.1"/>
+    <rect x="40" y="54.5" width="12" height="5" rx="1.5" fill="#e9debe" stroke="#5b5040" stroke-width="1.1"/>
+    <rect x="44.5" y="36" width="3" height="2" rx="1" fill="#77624e" stroke="none"/>
+    <rect x="44.5" y="56" width="3" height="2" rx="1" fill="#77624e" stroke="none"/>
+  </g>
+</svg>

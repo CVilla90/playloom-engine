@@ -16,24 +16,26 @@ export class TouchControls {
   private readonly usePointerIds = new Set<number>();
   private readonly primaryPointerIds = new Set<number>();
   private readonly utilityPointerIds = new Set<number>();
+  private readonly inventoryPointerIds = new Set<number>();
   private readonly menuPointerIds = new Set<number>();
   private usePressed = false;
   private primaryPressed = false;
   private utilityPressed = false;
+  private inventoryPressed = false;
   private menuPressed = false;
   private menuConfirming = false;
   private sawTouchInput = false;
+  private primaryLabel = "ACT";
 
   private readonly onPointerDown = (event: PointerEvent): void => {
-    if (event.pointerType === "mouse") {
-      return;
-    }
-
-    event.preventDefault();
-    this.sawTouchInput = true;
     const point = this.toCanvasPoint(event);
     if (!point) {
       return;
+    }
+
+    if (event.pointerType !== "mouse") {
+      event.preventDefault();
+      this.sawTouchInput = true;
     }
 
     if (this.isMoveZone(point) && this.movePointerId === null) {
@@ -54,6 +56,13 @@ export class TouchControls {
     if (this.isUtilityZone(point)) {
       this.utilityPointerIds.add(event.pointerId);
       this.utilityPressed = true;
+      this.tryCapture(event.pointerId);
+      return;
+    }
+
+    if (this.isInventoryZone(point)) {
+      this.inventoryPointerIds.add(event.pointerId);
+      this.inventoryPressed = true;
       this.tryCapture(event.pointerId);
       return;
     }
@@ -105,6 +114,7 @@ export class TouchControls {
     this.usePointerIds.delete(event.pointerId);
     this.primaryPointerIds.delete(event.pointerId);
     this.utilityPointerIds.delete(event.pointerId);
+    this.inventoryPointerIds.delete(event.pointerId);
     this.menuPointerIds.delete(event.pointerId);
     this.tryRelease(event.pointerId);
   };
@@ -132,12 +142,15 @@ export class TouchControls {
     this.usePointerIds.clear();
     this.primaryPointerIds.clear();
     this.utilityPointerIds.clear();
+    this.inventoryPointerIds.clear();
     this.menuPointerIds.clear();
     this.usePressed = false;
     this.primaryPressed = false;
     this.utilityPressed = false;
+    this.inventoryPressed = false;
     this.menuPressed = false;
     this.menuConfirming = false;
+    this.primaryLabel = "ACT";
   }
 
   axis(): Point {
@@ -170,6 +183,12 @@ export class TouchControls {
     return pressed;
   }
 
+  consumeInventoryPressed(): boolean {
+    const pressed = this.inventoryPressed;
+    this.inventoryPressed = false;
+    return pressed;
+  }
+
   consumeMenuPressed(): boolean {
     const pressed = this.menuPressed;
     this.menuPressed = false;
@@ -178,6 +197,10 @@ export class TouchControls {
 
   setMenuConfirming(confirming: boolean): void {
     this.menuConfirming = confirming;
+  }
+
+  setPrimaryLabel(label: string): void {
+    this.primaryLabel = label;
   }
 
   shouldRender(): boolean {
@@ -198,10 +221,12 @@ export class TouchControls {
     const useCenter = this.useCenter();
     const primaryCenter = this.primaryCenter();
     const utilityCenter = this.utilityCenter();
+    const inventoryButton = this.inventoryButtonRect();
     const menuButton = this.menuButtonRect();
     const useHeld = this.usePointerIds.size > 0;
     const primaryHeld = this.primaryPointerIds.size > 0;
     const utilityHeld = this.utilityPointerIds.size > 0;
+    const inventoryHeld = this.inventoryPointerIds.size > 0;
     const menuHeld = this.menuPointerIds.size > 0;
 
     ctx.save();
@@ -229,6 +254,21 @@ export class TouchControls {
       utilityCenter.y,
       34,
       utilityHeld ? "rgba(146, 231, 171, 0.42)" : "rgba(24, 49, 36, 0.42)"
+    );
+    renderer.rect(
+      inventoryButton.x,
+      inventoryButton.y,
+      inventoryButton.width,
+      inventoryButton.height,
+      inventoryHeld ? "rgba(164, 157, 103, 0.64)" : "rgba(37, 35, 23, 0.56)"
+    );
+    renderer.strokeRect(
+      inventoryButton.x,
+      inventoryButton.y,
+      inventoryButton.width,
+      inventoryButton.height,
+      "rgba(248, 233, 176, 0.34)",
+      1
     );
     renderer.rect(
       menuButton.x,
@@ -259,7 +299,7 @@ export class TouchControls {
       color: "#f7efbd",
       font: "bold 14px Trebuchet MS"
     });
-    renderer.text("ACT", primaryCenter.x, primaryCenter.y + 5, {
+    renderer.text(this.primaryLabel, primaryCenter.x, primaryCenter.y + 5, {
       align: "center",
       color: "#c6f8ff",
       font: "bold 14px Trebuchet MS"
@@ -267,6 +307,11 @@ export class TouchControls {
     renderer.text("UTIL", utilityCenter.x, utilityCenter.y + 5, {
       align: "center",
       color: "#d7ffe0",
+      font: "bold 13px Trebuchet MS"
+    });
+    renderer.text("BAG", inventoryButton.x + inventoryButton.width * 0.5, inventoryButton.y + 21, {
+      align: "center",
+      color: "#fff0bb",
       font: "bold 13px Trebuchet MS"
     });
     renderer.text(this.menuConfirming ? "SURE?" : "LOBBY", menuButton.x + menuButton.width * 0.5, menuButton.y + 21, {
@@ -294,41 +339,45 @@ export class TouchControls {
   private currentMoveCenter(): Point {
     const defaultCenter = {
       x: 94,
-      y: this.height - 92
+      y: this.height - 104
     };
     if (this.movePointerId === null) {
       return defaultCenter;
     }
 
     return {
-      x: clamp(this.moveOrigin.x, 82, this.width * 0.42),
-      y: clamp(this.moveOrigin.y, this.height * 0.56, this.height - 82)
+      x: clamp(this.moveOrigin.x, 70, this.width - 70),
+      y: clamp(this.moveOrigin.y, 70, this.height - 70)
     };
   }
 
   private useCenter(): Point {
     return {
       x: this.width - 92,
-      y: this.height - 92
+      y: this.height - 104
     };
   }
 
   private primaryCenter(): Point {
     return {
       x: this.width - 188,
-      y: this.height - 154
+      y: this.height - 166
     };
   }
 
   private utilityCenter(): Point {
     return {
       x: this.width - 92,
-      y: Math.max(this.height - 236, this.height * 0.42)
+      y: Math.max(this.height - 248, this.height * 0.4)
     };
   }
 
   private isMoveZone(point: Point): boolean {
-    return point.x <= this.width * 0.45 && point.y >= this.height * 0.52;
+    return !this.isPrimaryZone(point)
+      && !this.isUtilityZone(point)
+      && !this.isUseZone(point)
+      && !this.isMenuZone(point)
+      && !this.isInventoryZone(point);
   }
 
   private isUseZone(point: Point): boolean {
@@ -356,11 +405,30 @@ export class TouchControls {
     );
   }
 
+  private isInventoryZone(point: Point): boolean {
+    const button = this.inventoryButtonRect();
+    return (
+      point.x >= button.x &&
+      point.x <= button.x + button.width &&
+      point.y >= button.y &&
+      point.y <= button.y + button.height
+    );
+  }
+
   private menuButtonRect(): { x: number; y: number; width: number; height: number } {
     return {
       x: this.width - 118,
       y: 74,
       width: 104,
+      height: 32
+    };
+  }
+
+  private inventoryButtonRect(): { x: number; y: number; width: number; height: number } {
+    return {
+      x: 14,
+      y: 74,
+      width: 76,
       height: 32
     };
   }

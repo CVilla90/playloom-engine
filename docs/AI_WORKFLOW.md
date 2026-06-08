@@ -25,19 +25,20 @@ Enable an AI agent to create a new game with minimal manual steps while preservi
    - `npm run asset:gen -- sfx <game-id> <asset-id>`
    - `npm run asset:gen -- music-loop <game-id> <asset-id>`
 5. Register assets in `assets/asset.manifest.json` (auto-upserted by Asset Lab).
-6. Validate manifests and boundaries:
+6. If a game needs a Node-side multiplayer/server bundle, add optional `serverEntry` to its `game.manifest.json`; keep the path inside that game folder.
+7. Validate manifests and boundaries:
    - `npm run validate`
-7. Run targeted tests:
+8. Run targeted tests:
    - `npm run test`
-8. Run full smoke checks:
+9. Run full smoke checks:
    - `npm run smoke`
-9. If missing engine capability is found, propose an engine extension PR before game-side workaround.
-10. For movement-heavy prototypes, prefer reusable engine modules before custom scene code:
+10. If missing engine capability is found, propose an engine extension PR before game-side workaround.
+11. For movement-heavy prototypes, prefer reusable engine modules before custom scene code:
    - `ZoneMap` + `PlatformerController` (`@playloom/engine-core`)
    - `ActionMap` (`@playloom/engine-input`)
    - `AudioMixer` (`@playloom/engine-audio`)
    - blockout helpers (`@playloom/engine-renderer-canvas`)
-11. For character customization prototypes, prefer reusable engine modules:
+12. For character customization prototypes, prefer reusable engine modules:
    - `createCharacterLabActionBindings` (`@playloom/engine-input`)
    - `composeTintedSpriteFrame` (`@playloom/engine-renderer-canvas`)
 

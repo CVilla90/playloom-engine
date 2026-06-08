@@ -1,0 +1,89 @@
+{
+  "gameId": "zacaton-depths",
+  "assets": [
+    {
+      "id": "diver-body",
+      "kind": "image",
+      "path": "svg/diver-body.svg",
+      "license": "generated-in-repo",
+      "source": "games/zacaton-depths/assets/svg/diver-body.svg#manual"
+    },
+    {
+      "id": "tank-single",
+      "kind": "image",
+      "path": "svg/tank-single.svg",
+      "license": "generated-in-repo",
+      "source": "games/zacaton-depths/assets/svg/tank-single.svg#manual"
+    },
+    {
+      "id": "tank-double",
+      "kind": "image",
+      "path": "svg/tank-double.svg",
+      "license": "generated-in-repo",
+      "source": "games/zacaton-depths/assets/svg/tank-double.svg#manual"
+    },
+    {
+      "id": "backup-tank",
+      "kind": "image",
+      "path": "svg/backup-tank.svg",
+      "license": "generated-in-repo",
+      "source": "games/zacaton-depths/assets/svg/backup-tank.svg#manual"
+    },
+    {
+      "id": "fins-standard",
+      "kind": "image",
+      "path": "svg/fins-standard.svg",
+      "license": "generated-in-repo",
+      "source": "games/zacaton-depths/assets/svg/fins-standard.svg#manual"
+    },
+    {
+      "id": "fins-fast",
+      "kind": "image",
+      "path": "svg/fins-fast.svg",
+      "license": "generated-in-repo",
+      "source": "games/zacaton-depths/assets/svg/fins-fast.svg#manual"
+    },
+    {
+      "id": "flashlight",
+      "kind": "image",
+      "path": "svg/flashlight.svg",
+      "license": "generated-in-repo",
+      "source": "games/zacaton-depths/assets/svg/flashlight.svg#manual"
+    },
+    {
+      "id": "depth-gauge",
+      "kind": "image",
+      "path": "svg/depth-gauge.svg",
+      "license": "generated-in-repo",
+      "source": "games/zacaton-depths/assets/svg/depth-gauge.svg#manual"
+    },
+    {
+      "id": "cave-plant",
+      "kind": "image",
+      "path": "svg/cave-plant.svg",
+      "license": "generated-in-repo",
+      "source": "games/zacaton-depths/assets/svg/cave-plant.svg#manual"
+    },
+    {
+      "id": "rock-cluster",
+      "kind": "image",
+      "path": "svg/rock-cluster.svg",
+      "license": "generated-in-repo",
+      "source": "games/zacaton-depths/assets/svg/rock-cluster.svg#manual"
+    },
+    {
+      "id": "mineral-vein",
+      "kind": "image",
+      "path": "svg/mineral-vein.svg",
+      "license": "generated-in-repo",
+      "source": "games/zacaton-depths/assets/svg/mineral-vein.svg#manual"
+    },
+    {
+      "id": "limestone-shelf",
+      "kind": "image",
+      "path": "svg/limestone-shelf.svg",
+      "license": "generated-in-repo",
+      "source": "games/zacaton-depths/assets/svg/limestone-shelf.svg#manual"
+    }
+  ]
+}

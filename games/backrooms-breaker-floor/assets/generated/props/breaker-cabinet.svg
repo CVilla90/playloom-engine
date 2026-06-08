@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="92" height="104" viewBox="0 0 92 104">
+  <defs>
+    <linearGradient id="cabTop" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#ccb387"/>
+      <stop offset="100%" stop-color="#8a6e47"/>
+    </linearGradient>
+    <linearGradient id="cabFront" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#867554"/>
+      <stop offset="100%" stop-color="#4e402d"/>
+    </linearGradient>
+    <linearGradient id="lamp" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#9af4a8"/>
+      <stop offset="100%" stop-color="#3f9954"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="46" cy="90" rx="24" ry="8" fill="#000000" opacity="0.18"/>
+
+  <g stroke-linejoin="round">
+    <path d="M22 24 L56 19 L66 26 L32 31 Z" fill="url(#cabTop)" stroke="#5c4932" stroke-width="1.4"/>
+    <path d="M22 24 L22 72 L32 80 L32 31 Z" fill="#756249" stroke="#503f2d" stroke-width="1.4"/>
+    <path d="M32 31 L66 26 L66 80 L32 85 Z" fill="url(#cabFront)" stroke="#5c4932" stroke-width="1.5"/>
+
+    <rect x="38" y="38" width="22" height="16" rx="1.8" fill="#2f362f" stroke="#171b17" stroke-width="1.1"/>
+    <circle cx="44" cy="46" r="3.8" fill="url(#lamp)" stroke="#1b301f" stroke-width="1"/>
+    <circle cx="54" cy="46" r="3.8" fill="#f0cf72" stroke="#634f1e" stroke-width="1"/>
+
+    <rect x="39" y="60" width="20" height="11" rx="1.2" fill="#6c7174" stroke="#23272a" stroke-width="1.1"/>
+    <path d="M43 63 L49 61.8 L49 68.2 L43 69.2 Z" fill="#d0d7dc" stroke="#50565a" stroke-width="0.8"/>
+    <path d="M51 62 L57 61 L57 67.4 L51 68.4 Z" fill="#d0d7dc" stroke="#50565a" stroke-width="0.8"/>
+
+    <path d="M29 17 L39 15 L43 18 L33 20 Z" fill="#dfbf57" stroke="#785d1c" stroke-width="1"/>
+    <text x="36" y="18.6" fill="#33270a" font-family="Trebuchet MS, sans-serif" font-size="5.4" font-weight="700" text-anchor="middle">HV</text>
+  </g>
+</svg>

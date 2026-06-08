@@ -151,6 +151,23 @@ function createPunchImpact() {
   });
 }
 
+function createPistolShot() {
+  const duration = 0.2;
+  const noiseA = createNoise(31.4);
+  const noiseB = createNoise(36.1);
+
+  return createBuffer(duration, (time) => {
+    const env = envelope(time, duration, 0.0004, 0.055);
+    const blast = Math.sin(2 * Math.PI * (94 - time * 30) * time) * Math.exp(-time * 26) * 0.9;
+    const body = Math.sin(2 * Math.PI * (172 - time * 44) * time + 0.28) * Math.exp(-time * 24) * 0.34;
+    const crack = Math.sin(2 * Math.PI * (2450 + time * 880) * time) * Math.exp(-time * 70) * 0.22;
+    const snap = noiseA(time * 124) * Math.exp(-time * 60) * 0.26;
+    const air = noiseB(time * 46) * Math.exp(-time * 19) * 0.14;
+    const room = Math.sin(2 * Math.PI * 228 * time + 0.7) * Math.exp(-time * 15) * 0.08;
+    return (blast + body + crack + snap + air + room) * env * 1.04;
+  });
+}
+
 function createStalkerStep() {
   const duration = 0.34;
   const noise = createNoise(23.6);
@@ -253,6 +270,7 @@ async function main() {
     ["backrooms-suit-step.wav", createStep()],
     ["backrooms-punch-swing.wav", createPunchSwing()],
     ["backrooms-punch-impact.wav", createPunchImpact()],
+    ["backrooms-pistol-shot.wav", createPistolShot()],
     ["backrooms-relay-surge.wav", createRelayPickup()],
     ["backrooms-breaker-clang.wav", createBreakerToggle()],
     ["backrooms-stalker-step.wav", createStalkerStep()],

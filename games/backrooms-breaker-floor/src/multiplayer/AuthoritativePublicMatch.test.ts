@@ -7,6 +7,7 @@ import {
   ROUND_DURATION_MS
 } from "./publicRoomTypes";
 import { AuthoritativePublicMatch } from "./AuthoritativePublicMatch";
+import { SEARCHABLE_CONTAINERS } from "../containers";
 import { EXIT_TERMINAL, LOCKED_EXIT_GATE, PANELS, PLAYER_SPAWN_POINTS, RELAYS } from "../world";
 
 describe("AuthoritativePublicMatch", () => {
@@ -44,6 +45,9 @@ describe("AuthoritativePublicMatch", () => {
     expect(snapshot.missionProgress.panelTotal).toBe(PANELS.length);
     expect(snapshot.objectives.restoredRelayIds).toEqual([]);
     expect(snapshot.objectives.activatedPanelIds).toEqual([]);
+    expect(snapshot.players[0]?.inventory.slots[0]).toBe("pistol_9mm");
+    expect(snapshot.players[0]?.inventory.activeSlotIndex).toBe(0);
+    expect(snapshot.players[0]?.inventory.ammo9mmReserve).toBe(100);
   });
 
   it("tracks collected pickups and objective ids in authoritative snapshots", () => {
@@ -69,6 +73,110 @@ describe("AuthoritativePublicMatch", () => {
     expect(snapshot.objectives.restoredRelayIds).toEqual([RELAYS[0]!.id]);
     expect(snapshot.objectives.activatedPanelIds).toEqual([]);
     expect(snapshot.players[0]?.speedBoostTimeRemainingMs).toBeGreaterThan(0);
+  });
+
+  it("opens nearby searchable containers with deterministic room-biased contents", () => {
+    const match = new AuthoritativePublicMatch({
+      now: 2_200,
+      random: () => 0.35
+    });
+
+    expect(match.joinPlayer({ id: "p1", name: "Carla" }, 2_200).ok).toBe(true);
+
+    const container = SEARCHABLE_CONTAINERS.find((candidate) => candidate.areaId === "quiet-depot");
+    expect(container).toBeTruthy();
+
+    match.setPlayerPosition("p1", container!.x, container!.y, 2_210);
+    const firstOpen = match.openContainer("p1", container!.id, 2_220);
+    expect(firstOpen.ok).toBe(true);
+    expect(firstOpen.value).toEqual({
+      id: container!.id,
+      label: container!.label,
+      itemCount: 1,
+      items: ["ammo_box_9mm"]
+    });
+
+    const secondOpen = match.openContainer("p1", container!.id, 2_230);
+    expect(secondOpen.ok).toBe(true);
+    expect(secondOpen.value).toEqual(firstOpen.value);
+  });
+
+  it("rejects container searches when the player is too far away", () => {
+    const match = new AuthoritativePublicMatch({
+      now: 2_300,
+      random: () => 0.4
+    });
+
+    expect(match.joinPlayer({ id: "p1", name: "Carla" }, 2_300).ok).toBe(true);
+
+    const container = SEARCHABLE_CONTAINERS.find((candidate) => candidate.areaId === "quiet-depot");
+    expect(container).toBeTruthy();
+
+    match.setPlayerPosition("p1", PLAYER_SPAWN_POINTS[0]!.x, PLAYER_SPAWN_POINTS[0]!.y, 2_310);
+    const result = match.openContainer("p1", container!.id, 2_320);
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("Move closer to the container first.");
+    expect(result.value).toBeNull();
+  });
+
+  it("moves items from containers into the player's limited inventory", () => {
+    const match = new AuthoritativePublicMatch({
+      now: 2_360,
+      random: () => 0.35
+    });
+
+    expect(match.joinPlayer({ id: "p1", name: "Carla" }, 2_360).ok).toBe(true);
+    const container = SEARCHABLE_CONTAINERS.find((candidate) => candidate.areaId === "quiet-depot");
+    expect(container).toBeTruthy();
+
+    match.setPlayerPosition("p1", container!.x, container!.y, 2_370);
+    const take = match.takeContainerItem("p1", container!.id, 0, 2_380);
+    expect(take.ok).toBe(true);
+    expect(take.value?.itemCount).toBe(0);
+
+    const inventory = match.getSnapshot(2_381).players.find((player) => player.id === "p1")?.inventory;
+    expect(inventory?.slots[0]).toBe("pistol_9mm");
+    expect(inventory?.slots[1]).toBe("ammo_box_9mm");
+    expect(inventory?.capacity).toBe(6);
+  });
+
+  it("uses consumable inventory items and drops/recovers non-consumables", () => {
+    const match = new AuthoritativePublicMatch({
+      now: 2_390,
+      random: () => 0.3
+    });
+
+    expect(match.joinPlayer({ id: "p1", name: "Carla" }, 2_390).ok).toBe(true);
+    const medicalContainer = SEARCHABLE_CONTAINERS.find((candidate) => candidate.id === "prep-bay-lockers");
+    expect(medicalContainer).toBeTruthy();
+
+    match.setPlayerPosition("p1", medicalContainer!.x, medicalContainer!.y, 2_400);
+    expect(match.takeContainerItem("p1", medicalContainer!.id, 0, 2_410).ok).toBe(true);
+    expect(match.applyPlayerDamage("p1", 30, 2_420).ok).toBe(true);
+    const used = match.useInventorySlot("p1", 1, 2_430);
+    expect(used.ok).toBe(true);
+    expect(used.value?.health).toBe(95);
+    expect(used.value?.inventory.slots[0]).toBe("pistol_9mm");
+    expect(used.value?.inventory.slots[1]).toBeNull();
+
+    const securityMatch = new AuthoritativePublicMatch({
+      now: 2_500,
+      random: () => 0.35
+    });
+    expect(securityMatch.joinPlayer({ id: "p1", name: "Carla" }, 2_500).ok).toBe(true);
+    const securityContainer = SEARCHABLE_CONTAINERS.find((candidate) => candidate.areaId === "quiet-depot");
+    expect(securityContainer).toBeTruthy();
+
+    securityMatch.setPlayerPosition("p1", securityContainer!.x, securityContainer!.y, 2_510);
+    expect(securityMatch.takeContainerItem("p1", securityContainer!.id, 0, 2_520).ok).toBe(true);
+    expect(securityMatch.dropInventorySlot("p1", 1, 2_530).ok).toBe(true);
+    const looseItem = securityMatch.getSnapshot(2_531).looseItems.find((item) => !item.collected);
+    expect(looseItem?.type).toBe("ammo_box_9mm");
+
+    securityMatch.setPlayerPosition("p1", looseItem!.x, looseItem!.y, 2_540);
+    expect(securityMatch.collectLooseItem("p1", looseItem!.id, 2_550).ok).toBe(true);
+    expect(securityMatch.getSnapshot(2_551).players.find((player) => player.id === "p1")?.inventory.slots[0]).toBe("pistol_9mm");
+    expect(securityMatch.getSnapshot(2_551).players.find((player) => player.id === "p1")?.inventory.slots[1]).toBe("ammo_box_9mm");
   });
 
   it("keeps player health authoritative and validates punch hits in the match core", () => {
@@ -104,6 +212,29 @@ describe("AuthoritativePublicMatch", () => {
       defeated: false
     });
     expect(match.getSnapshot(2_551).players.find((player) => player.id === "p2")?.health).toBe(90);
+  });
+
+  it("fires the equipped pistol, spends reserve ammo, and resolves projectile hits", () => {
+    const match = new AuthoritativePublicMatch({
+      now: 2_560,
+      random: () => 0.2
+    });
+
+    expect(match.joinPlayer({ id: "p1", name: "Carla" }, 2_560).ok).toBe(true);
+    expect(match.joinPlayer({ id: "p2", name: "Milo" }, 2_565).ok).toBe(true);
+
+    match.setPlayerPosition("p1", 220, 292, 2_580);
+    match.setPlayerPosition("p2", 280, 292, 2_580);
+
+    const shot = match.fireEquippedItem("p1", { x: 1, y: 0 }, 2_600);
+    expect(shot.ok).toBe(true);
+    expect(shot.value?.ownerId).toBe("p1");
+    expect(match.getSnapshot(2_601).players.find((player) => player.id === "p1")?.inventory.ammo9mmReserve).toBe(99);
+    expect(match.getSnapshot(2_601).projectiles).toHaveLength(1);
+
+    match.tick(2_700);
+    expect(match.getSnapshot(2_701).players.find((player) => player.id === "p2")?.health).toBe(80);
+    expect(match.getSnapshot(2_701).projectiles).toHaveLength(0);
   });
 
   it("clamps synced player movement against locked gates and walkable areas", () => {

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="48" viewBox="0 0 60 48">
+  <defs>
+    <linearGradient id="medTop" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f4eee2"/>
+      <stop offset="100%" stop-color="#cec2ac"/>
+    </linearGradient>
+    <linearGradient id="medFront" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#e4ddd0"/>
+      <stop offset="100%" stop-color="#ada392"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="30" cy="38" rx="12" ry="4" fill="#000000" opacity="0.12"/>
+
+  <g stroke-linejoin="round">
+    <path d="M18 20 L31 17 L37 21 L24 24 Z" fill="url(#medTop)" stroke="#6c645b" stroke-width="1"/>
+    <path d="M18 20 L18 29 L24 33 L24 24 Z" fill="#beb2a0" stroke="#6c645b" stroke-width="1"/>
+    <path d="M24 24 L37 21 L37 33 L24 36 Z" fill="url(#medFront)" stroke="#6c645b" stroke-width="1.1"/>
+    <path d="M26.5 25.6 L28.8 25.2 L28.8 27.8 L31.2 27.4 L31.2 29.7 L33.6 29.3 L33.6 31.7 L31.2 32.1 L31.2 34.4 L28.8 34.8 L28.8 32.5 L26.5 32.9 L26.5 30.5 L24.2 30.9 L24.2 28.6 L26.5 28.2 Z" fill="#d64949" stroke="#862626" stroke-width="0.9"/>
+    <path d="M27.7 17.4 L29.7 15.2 L33.2 14.6 L35.2 16.2 L31.6 16.8 Z" fill="#ddd0bc" stroke="#6c645b" stroke-width="0.8"/>
+  </g>
+</svg>

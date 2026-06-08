@@ -15,8 +15,11 @@ import type {
   PublicRoomSnapshot
 } from "./publicRoomTypes";
 import type {
+  MatchInventorySnapshot,
+  MatchOpenedContainerSnapshot,
   MatchPunchResult,
   MatchPlayerSnapshot,
+  MatchProjectileSnapshot,
   MatchSnapshot,
   MatchStalkerSnapshot
 } from "./protocol";
@@ -47,6 +50,7 @@ export class LocalAuthoritativePublicRoomService implements PublicRoomService {
   private snapshot: PublicRoomSnapshot;
   private matchSnapshot: MatchSnapshot | null = null;
   private pendingLocalPunchResults: MatchPunchResult[] = [];
+  private pendingOpenedContainers: MatchOpenedContainerSnapshot[] = [];
 
   constructor(options: AuthoritativePublicMatchOptions = {}) {
     const now = options.now ?? Date.now();
@@ -77,10 +81,20 @@ export class LocalAuthoritativePublicRoomService implements PublicRoomService {
     return this.matchSnapshot?.players.find((player) => player.id === this.sessionId) ?? null;
   }
 
+  getLocalInventorySnapshot(): MatchInventorySnapshot | null {
+    return this.getLocalPlayerMatchSnapshot()?.inventory ?? null;
+  }
+
   consumeLocalPunchResults(): readonly MatchPunchResult[] {
     const results = this.pendingLocalPunchResults;
     this.pendingLocalPunchResults = [];
     return results;
+  }
+
+  consumeOpenedContainers(): readonly MatchOpenedContainerSnapshot[] {
+    const opened = this.pendingOpenedContainers;
+    this.pendingOpenedContainers = [];
+    return opened;
   }
 
   getPreferredName(): string {
@@ -147,8 +161,67 @@ export class LocalAuthoritativePublicRoomService implements PublicRoomService {
     };
   }
 
+  fireEquippedItem(facing: { x: number; y: number }, now = Date.now()): RoomActionResult<MatchProjectileSnapshot> {
+    const result = this.match.fireEquippedItem(this.sessionId, facing, now);
+    this.refresh(now);
+    return {
+      ok: result.ok,
+      reason: result.reason,
+      value: result.value
+    };
+  }
+
+  openContainer(containerId: string, now = Date.now()): RoomActionResult<MatchOpenedContainerSnapshot> {
+    const result = this.match.openContainer(this.sessionId, containerId, now);
+    this.refresh(now);
+    if (result.value) {
+      this.pendingOpenedContainers.push(result.value);
+    }
+    return {
+      ok: result.ok,
+      reason: result.reason,
+      value: result.value
+    };
+  }
+
+  takeContainerItem(containerId: string, itemIndex: number, now = Date.now()): RoomActionResult<MatchOpenedContainerSnapshot> {
+    const result = this.match.takeContainerItem(this.sessionId, containerId, itemIndex, now);
+    this.refresh(now);
+    if (result.value) {
+      this.pendingOpenedContainers.push(result.value);
+    }
+    return {
+      ok: result.ok,
+      reason: result.reason,
+      value: result.value
+    };
+  }
+
+  takeAllContainerItems(containerId: string, now = Date.now()): RoomActionResult<MatchOpenedContainerSnapshot> {
+    const result = this.match.takeAllContainerItems(this.sessionId, containerId, now);
+    this.refresh(now);
+    if (result.value) {
+      this.pendingOpenedContainers.push(result.value);
+    }
+    return {
+      ok: result.ok,
+      reason: result.reason,
+      value: result.value
+    };
+  }
+
   collectPickup(pickupId: string, now = Date.now()): RoomActionResult<MatchSnapshot> {
     const result = this.match.collectPickup(this.sessionId, pickupId, now);
+    this.refresh(now);
+    return {
+      ok: result.ok,
+      reason: result.reason,
+      value: result.ok ? this.matchSnapshot : null
+    };
+  }
+
+  collectLooseItem(itemId: string, now = Date.now()): RoomActionResult<MatchSnapshot> {
+    const result = this.match.collectLooseItem(this.sessionId, itemId, now);
     this.refresh(now);
     return {
       ok: result.ok,
@@ -184,6 +257,36 @@ export class LocalAuthoritativePublicRoomService implements PublicRoomService {
       ok: result.ok,
       reason: result.reason,
       value: result.ok ? this.matchSnapshot : null
+    };
+  }
+
+  useInventorySlot(slotIndex: number, now = Date.now()): RoomActionResult<MatchPlayerSnapshot> {
+    const result = this.match.useInventorySlot(this.sessionId, slotIndex, now);
+    this.refresh(now);
+    return {
+      ok: result.ok,
+      reason: result.reason,
+      value: result.value
+    };
+  }
+
+  setActiveInventorySlot(slotIndex: number, now = Date.now()): RoomActionResult<MatchPlayerSnapshot> {
+    const result = this.match.setActiveInventorySlot(this.sessionId, slotIndex, now);
+    this.refresh(now);
+    return {
+      ok: result.ok,
+      reason: result.reason,
+      value: result.value
+    };
+  }
+
+  dropInventorySlot(slotIndex: number, now = Date.now()): RoomActionResult<MatchPlayerSnapshot> {
+    const result = this.match.dropInventorySlot(this.sessionId, slotIndex, now);
+    this.refresh(now);
+    return {
+      ok: result.ok,
+      reason: result.reason,
+      value: result.value
     };
   }
 

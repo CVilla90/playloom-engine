@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 96" role="img" aria-label="side profile long technical fins">
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M28 71C12 73 2 79-11 91c20 1 37-2 51-14z" fill="#51662d" stroke="#c9e98f" stroke-width="2"/>
+    <path d="M27 33C11 31 1 26-12 16c20-3 38 0 52 11z" fill="#51662d" stroke="#c9e98f" stroke-width="2"/>
+    <path d="M1 85l35-11M1 21l35 10" stroke="#2d3c1e" stroke-width="2.5"/>
+    <path d="M16 82l20-7M16 24l20 6" stroke="#2d3c1e" stroke-width="1.8"/>
+  </g>
+</svg>

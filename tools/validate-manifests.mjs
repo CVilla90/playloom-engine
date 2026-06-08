@@ -1,12 +1,17 @@
 import { access, readdir, readFile } from "node:fs/promises";
 import { constants as fsConstants } from "node:fs";
-import { dirname, join, normalize, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, normalize, relative, resolve } from "node:path";
 
 const root = process.cwd();
 const gamesRoot = join(root, "games");
 
 function isObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isInside(parent, child) {
+  const rel = normalize(relative(parent, child));
+  return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
 }
 
 async function pathExists(path) {
@@ -59,6 +64,12 @@ function validateGameManifest(manifest, gameId, gameDir, errors) {
   if (typeof manifest.assetsManifest !== "string" || manifest.assetsManifest.trim().length === 0) {
     errors.push(`${gameId}/game.manifest.json: assetsManifest must be a non-empty string`);
   }
+  if (
+    manifest.serverEntry !== undefined &&
+    (typeof manifest.serverEntry !== "string" || manifest.serverEntry.trim().length === 0)
+  ) {
+    errors.push(`${gameId}/game.manifest.json: serverEntry must be a non-empty string when provided`);
+  }
   if (!isObject(manifest.save)) {
     errors.push(`${gameId}/game.manifest.json: save must be an object`);
   } else {
@@ -72,7 +83,11 @@ function validateGameManifest(manifest, gameId, gameDir, errors) {
 
   return {
     entryPath: typeof manifest.entry === "string" ? join(gameDir, manifest.entry) : null,
-    assetsManifestPath: typeof manifest.assetsManifest === "string" ? join(gameDir, manifest.assetsManifest) : null
+    assetsManifestPath: typeof manifest.assetsManifest === "string" ? join(gameDir, manifest.assetsManifest) : null,
+    serverEntryPath:
+      typeof manifest.serverEntry === "string" && manifest.serverEntry.trim().length > 0
+        ? resolve(gameDir, manifest.serverEntry)
+        : null
   };
 }
 
@@ -147,6 +162,13 @@ async function main() {
 
     if (pointers?.entryPath && !(await pathExists(pointers.entryPath))) {
       errors.push(`${gameId}/game.manifest.json: entry file not found (${relative(root, pointers.entryPath)})`);
+    }
+    if (pointers?.serverEntryPath) {
+      if (!isInside(gameDir, pointers.serverEntryPath)) {
+        errors.push(`${gameId}/game.manifest.json: serverEntry must stay inside the game folder`);
+      } else if (!(await pathExists(pointers.serverEntryPath))) {
+        errors.push(`${gameId}/game.manifest.json: serverEntry file not found (${relative(root, pointers.serverEntryPath)})`);
+      }
     }
 
     if (!pointers?.assetsManifestPath) {

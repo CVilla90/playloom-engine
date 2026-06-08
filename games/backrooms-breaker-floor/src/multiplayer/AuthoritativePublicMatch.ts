@@ -7,6 +7,17 @@ import {
   rollPickupType
 } from "../pickups";
 import {
+  rollContainerContents,
+  SEARCHABLE_CONTAINERS,
+} from "../containers";
+import {
+  INVENTORY_SLOT_COUNT,
+  canEquipInventoryItem,
+  inventoryItemLabel,
+  type InventoryItemType
+} from "../inventory";
+import { GAME_MANIFEST } from "../types";
+import {
   chooseRandomRoamArea,
   chooseRandomStalkerSpawn,
   findAreaPath,
@@ -23,6 +34,8 @@ import {
   PANELS,
   PLAYER_SPAWN_POINTS,
   RELAYS,
+  WORLD_HEIGHT,
+  WORLD_WIDTH,
   type PlayerSpawnPointDef,
   type Rect
 } from "../world";
@@ -45,11 +58,15 @@ import {
   validatePlayerName
 } from "./roomModel";
 import type {
+  MatchInventorySnapshot,
+  MatchLooseItemSnapshot,
+  MatchOpenedContainerSnapshot,
   MatchObjectiveSnapshot,
   MatchPunchHit,
   MatchPunchResult,
   MatchPickupSnapshot,
   MatchPlayerSnapshot,
+  MatchProjectileSnapshot,
   MatchSnapshot,
   MatchStalkerSnapshot,
   MatchStalkerMode,
@@ -88,7 +105,11 @@ interface MatchPlayerState {
   punchFacing: MatchVector;
   punchArmSide: -1 | 1;
   nextPunchArmSide: -1 | 1;
+  fireCooldownEndsAt: number | null;
   lastPositionSyncAt: number;
+  inventorySlots: (InventoryItemType | null)[];
+  activeInventorySlotIndex: number | null;
+  ammo9mmReserve: number;
 }
 
 interface MatchPickupState {
@@ -98,6 +119,37 @@ interface MatchPickupState {
   y: number;
   radius: number;
   collected: boolean;
+}
+
+interface MatchContainerState {
+  readonly id: string;
+  readonly label: string;
+  readonly x: number;
+  readonly y: number;
+  readonly areaId: string;
+  readonly interactionRadius: number;
+  readonly items: InventoryItemType[];
+}
+
+interface MatchLooseItemState {
+  readonly id: string;
+  readonly type: InventoryItemType;
+  readonly x: number;
+  readonly y: number;
+  collected: boolean;
+}
+
+interface MatchProjectileState {
+  readonly id: string;
+  readonly ownerId: string;
+  x: number;
+  y: number;
+  readonly facing: MatchVector;
+  readonly speed: number;
+  readonly radius: number;
+  readonly damage: number;
+  distanceRemaining: number;
+  readonly maxDistance: number;
 }
 
 interface MatchStalkerState {
@@ -230,6 +282,9 @@ export class AuthoritativePublicMatch {
   private results: PublicRoundResults | null = null;
   private readonly players = new Map<string, MatchPlayerState>();
   private pickups: MatchPickupState[] = [];
+  private containers: MatchContainerState[] = [];
+  private looseItems: MatchLooseItemState[] = [];
+  private projectiles: MatchProjectileState[] = [];
   private stalkers: MatchStalkerState[] = [];
   private readonly collectedRelayIds = new Set<string>();
   private readonly activatedPanelIds = new Set<string>();
@@ -315,7 +370,11 @@ export class AuthoritativePublicMatch {
       punchFacing: { x: 1, y: 0 },
       punchArmSide: 1,
       nextPunchArmSide: 1,
-      lastPositionSyncAt: now
+      fireCooldownEndsAt: null,
+      lastPositionSyncAt: now,
+      inventorySlots: existing?.inventorySlots ? [...existing.inventorySlots] : this.createInitialInventorySlots(),
+      activeInventorySlotIndex: existing ? existing.activeInventorySlotIndex : 0,
+      ammo9mmReserve: existing?.ammo9mmReserve ?? PLAYER_TUNING.pistol9mm.startingReserve
     };
     this.players.set(player.id, player);
 
@@ -576,6 +635,87 @@ export class AuthoritativePublicMatch {
     };
   }
 
+  fireEquippedItem(playerId: string, facing: MatchVector, now = Date.now()): ActionResult<MatchProjectileSnapshot> {
+    const player = this.players.get(playerId);
+    if (!player || player.isDead) {
+      return {
+        ok: false,
+        reason: "Player is not active in the match.",
+        value: null
+      };
+    }
+
+    this.tick(now);
+    if (!this.isRoundActive()) {
+      return {
+        ok: false,
+        reason: "Combat is unavailable in the current phase.",
+        value: null
+      };
+    }
+
+    if (player.activeInventorySlotIndex === null || player.inventorySlots[player.activeInventorySlotIndex] !== "pistol_9mm") {
+      return {
+        ok: false,
+        reason: "Equip the 9mm pistol first.",
+        value: null
+      };
+    }
+
+    if (player.ammo9mmReserve <= 0) {
+      return {
+        ok: false,
+        reason: "The 9mm is dry.",
+        value: null
+      };
+    }
+
+    if (player.fireCooldownEndsAt !== null && player.fireCooldownEndsAt > now) {
+      return {
+        ok: false,
+        reason: "The pistol is still cycling.",
+        value: null
+      };
+    }
+
+    if (this.phase === "lockdown_swarm" && player.insideExitSafe) {
+      return {
+        ok: false,
+        reason: "Safe players cannot attack during lockdown.",
+        value: null
+      };
+    }
+
+    const shotFacing = normalizeFacing(facing);
+    player.facing = shotFacing;
+    player.spawnProtectionEndsAt = null;
+    player.fireCooldownEndsAt = now + PLAYER_TUNING.pistol9mm.cooldown * 1000;
+    player.ammo9mmReserve -= 1;
+
+    const originX = player.x + shotFacing.x * 14;
+    const originY = player.y + shotFacing.y * 14;
+    const maxDistance = this.visibleShotDistanceForPlayer(player, shotFacing);
+    const projectile: MatchProjectileState = {
+      id: `projectile-${player.id}-${now}-${Math.floor(this.random() * 1_000_000)}`,
+      ownerId: player.id,
+      x: originX,
+      y: originY,
+      facing: shotFacing,
+      speed: PLAYER_TUNING.pistol9mm.projectileSpeed,
+      radius: PLAYER_TUNING.pistol9mm.projectileRadius,
+      damage: PLAYER_TUNING.pistol9mm.damage,
+      distanceRemaining: maxDistance,
+      maxDistance
+    };
+    this.projectiles.push(projectile);
+    this.tick(now);
+    return {
+      ok: true,
+      reason: null,
+      value: this.toProjectileSnapshot(projectile)
+    };
+  }
+
   collectRelay(playerId: string, relayId: string, now = Date.now()): ActionResult<PublicRoomMissionProgress> {
     const player = this.players.get(playerId);
     if (!player || player.isDead) {
@@ -659,6 +799,349 @@ export class AuthoritativePublicMatch {
       ok: true,
       reason: null,
       value: pickup
+    };
+  }
+
+  collectLooseItem(playerId: string, itemId: string, now = Date.now()): ActionResult<MatchLooseItemSnapshot> {
+    const player = this.players.get(playerId);
+    if (!player || player.isDead) {
+      return {
+        ok: false,
+        reason: "Player is not active in the match.",
+        value: null
+      };
+    }
+
+    const item = this.looseItems.find((candidate) => candidate.id === itemId);
+    if (!item || item.collected) {
+      return {
+        ok: false,
+        reason: "Item is no longer on the floor.",
+        value: null
+      };
+    }
+
+    if (!this.isWithinInteractionRange(player.x, player.y, item.x, item.y, PLAYER_RADIUS + 14)) {
+      return {
+        ok: false,
+        reason: "Move closer to the item first.",
+        value: null
+      };
+    }
+
+    if (!this.tryAddInventoryItem(player, item.type)) {
+      return {
+        ok: false,
+        reason: "Inventory is full.",
+        value: null
+      };
+    }
+
+    item.collected = true;
+    this.tick(now);
+    return {
+      ok: true,
+      reason: null,
+      value: {
+        ...item
+      }
+    };
+  }
+
+  openContainer(playerId: string, containerId: string, now = Date.now()): ActionResult<MatchOpenedContainerSnapshot> {
+    const player = this.players.get(playerId);
+    if (!player || player.isDead) {
+      return {
+        ok: false,
+        reason: "Player is not active in the match.",
+        value: null
+      };
+    }
+
+    const container = this.containers.find((candidate) => candidate.id === containerId);
+    if (!container) {
+      return {
+        ok: false,
+        reason: "Unknown searchable container.",
+        value: null
+      };
+    }
+
+    if (!this.isWithinInteractionRange(player.x, player.y, container.x, container.y, container.interactionRadius)) {
+      return {
+        ok: false,
+        reason: "Move closer to the container first.",
+        value: null
+      };
+    }
+
+    this.tick(now);
+    return {
+      ok: true,
+      reason: null,
+      value: {
+        ...this.toOpenedContainerSnapshot(container)
+      }
+    };
+  }
+
+  takeContainerItem(playerId: string, containerId: string, itemIndex: number, now = Date.now()): ActionResult<MatchOpenedContainerSnapshot> {
+    const player = this.players.get(playerId);
+    if (!player || player.isDead) {
+      return {
+        ok: false,
+        reason: "Player is not active in the match.",
+        value: null
+      };
+    }
+
+    const container = this.containers.find((candidate) => candidate.id === containerId);
+    if (!container) {
+      return {
+        ok: false,
+        reason: "Unknown searchable container.",
+        value: null
+      };
+    }
+
+    if (!this.isWithinInteractionRange(player.x, player.y, container.x, container.y, container.interactionRadius)) {
+      return {
+        ok: false,
+        reason: "Move closer to the container first.",
+        value: null
+      };
+    }
+
+    const item = container.items[itemIndex];
+    if (!item) {
+      return {
+        ok: false,
+        reason: "That item is no longer in the container.",
+        value: null
+      };
+    }
+
+    if (!this.tryAddInventoryItem(player, item)) {
+      return {
+        ok: false,
+        reason: "Inventory is full.",
+        value: null
+      };
+    }
+
+    container.items.splice(itemIndex, 1);
+    this.tick(now);
+    return {
+      ok: true,
+      reason: null,
+      value: this.toOpenedContainerSnapshot(container)
+    };
+  }
+
+  takeAllContainerItems(playerId: string, containerId: string, now = Date.now()): ActionResult<MatchOpenedContainerSnapshot> {
+    const player = this.players.get(playerId);
+    if (!player || player.isDead) {
+      return {
+        ok: false,
+        reason: "Player is not active in the match.",
+        value: null
+      };
+    }
+
+    const container = this.containers.find((candidate) => candidate.id === containerId);
+    if (!container) {
+      return {
+        ok: false,
+        reason: "Unknown searchable container.",
+        value: null
+      };
+    }
+
+    if (!this.isWithinInteractionRange(player.x, player.y, container.x, container.y, container.interactionRadius)) {
+      return {
+        ok: false,
+        reason: "Move closer to the container first.",
+        value: null
+      };
+    }
+
+    let takenCount = 0;
+    while (container.items.length > 0) {
+      const item = container.items[0];
+      if (!item || !this.tryAddInventoryItem(player, item)) {
+        break;
+      }
+      container.items.shift();
+      takenCount += 1;
+    }
+
+    if (takenCount <= 0) {
+      return {
+        ok: false,
+        reason: "Inventory is full.",
+        value: null
+      };
+    }
+
+    this.tick(now);
+    return {
+      ok: true,
+      reason: null,
+      value: this.toOpenedContainerSnapshot(container)
+    };
+  }
+
+  useInventorySlot(playerId: string, slotIndex: number, now = Date.now()): ActionResult<MatchPlayerSnapshot> {
+    const player = this.players.get(playerId);
+    if (!player || player.isDead) {
+      return {
+        ok: false,
+        reason: "Player is not active in the match.",
+        value: null
+      };
+    }
+
+    const item = player.inventorySlots[slotIndex];
+    if (!item) {
+      return {
+        ok: false,
+        reason: "That inventory slot is empty.",
+        value: null
+      };
+    }
+
+    switch (item) {
+      case "almond_milk":
+        if (player.health >= player.maxHealth) {
+          return {
+            ok: false,
+            reason: "Health is already full.",
+            value: null
+          };
+        }
+        player.health = clamp(player.health + 12, 0, player.maxHealth);
+        this.clearInventorySlot(player, slotIndex);
+        break;
+      case "ration_can":
+        if (player.health >= player.maxHealth) {
+          return {
+            ok: false,
+            reason: "Health is already full.",
+            value: null
+          };
+        }
+        player.health = clamp(player.health + 8, 0, player.maxHealth);
+        this.clearInventorySlot(player, slotIndex);
+        break;
+      case "med_case":
+        if (player.health >= player.maxHealth) {
+          return {
+            ok: false,
+            reason: "Health is already full.",
+            value: null
+          };
+        }
+        player.health = clamp(player.health + MEDKIT_HEAL_AMOUNT, 0, player.maxHealth);
+        this.clearInventorySlot(player, slotIndex);
+        break;
+      case "pistol_9mm":
+        return {
+          ok: false,
+          reason: "The pistol has to be equipped from the bag controls.",
+          value: null
+        };
+      case "clipboard_note":
+        break;
+      case "office_badge":
+        break;
+      case "ammo_box_9mm":
+        player.ammo9mmReserve += PLAYER_TUNING.pistol9mm.ammoPerBox;
+        this.clearInventorySlot(player, slotIndex);
+        break;
+      case "flashlight_cells":
+        return {
+          ok: false,
+          reason: "Flashlight cell swapping is not wired yet.",
+          value: null
+        };
+    }
+
+    this.tick(now);
+    return {
+      ok: true,
+      reason: null,
+      value: this.toPlayerSnapshot(player, now)
+    };
+  }
+
+  setActiveInventorySlot(playerId: string, slotIndex: number, now = Date.now()): ActionResult<MatchPlayerSnapshot> {
+    const player = this.players.get(playerId);
+    if (!player || player.isDead) {
+      return {
+        ok: false,
+        reason: "Player is not active in the match.",
+        value: null
+      };
+    }
+
+    const item = player.inventorySlots[slotIndex];
+    if (!item) {
+      return {
+        ok: false,
+        reason: "That inventory slot is empty.",
+        value: null
+      };
+    }
+
+    if (!canEquipInventoryItem(item)) {
+      return {
+        ok: false,
+        reason: `${inventoryItemLabel(item)} cannot be equipped.`,
+        value: null
+      };
+    }
+
+    player.activeInventorySlotIndex = player.activeInventorySlotIndex === slotIndex ? null : slotIndex;
+    this.tick(now);
+    return {
+      ok: true,
+      reason: null,
+      value: this.toPlayerSnapshot(player, now)
+    };
+  }
+
+  dropInventorySlot(playerId: string, slotIndex: number, now = Date.now()): ActionResult<MatchPlayerSnapshot> {
+    const player = this.players.get(playerId);
+    if (!player || player.isDead) {
+      return {
+        ok: false,
+        reason: "Player is not active in the match.",
+        value: null
+      };
+    }
+
+    const item = player.inventorySlots[slotIndex];
+    if (!item) {
+      return {
+        ok: false,
+        reason: "That inventory slot is empty.",
+        value: null
+      };
+    }
+
+    this.looseItems.push({
+      id: `loose-${Math.floor(this.random() * 0xfffffff).toString(36)}-${now.toString(36)}`,
+      type: item,
+      x: player.x + player.facing.x * 24,
+      y: player.y + player.facing.y * 24,
+      collected: false
+    });
+    this.clearInventorySlot(player, slotIndex);
+    this.tick(now);
+    return {
+      ok: true,
+      reason: null,
+      value: this.toPlayerSnapshot(player, now)
     };
   }
 
@@ -845,6 +1328,10 @@ export class AuthoritativePublicMatch {
       pickups: this.pickups.map((pickup) => ({
         ...pickup
       })),
+      looseItems: this.looseItems.map((item) => ({
+        ...item
+      })),
+      projectiles: this.projectiles.map((projectile) => this.toProjectileSnapshot(projectile)),
       stalkers: this.stalkers.map((stalker) => this.toStalkerSnapshot(stalker)),
       statusBanner: this.statusBanner,
       results: this.results
@@ -894,6 +1381,7 @@ export class AuthoritativePublicMatch {
     const deltaMs = this.consumeTickDelta(now);
     if (deltaMs > 0) {
       this.tickPlayers(deltaMs);
+      this.tickProjectiles(deltaMs, now);
     }
     if (this.phase === "waiting") {
       return;
@@ -952,7 +1440,10 @@ export class AuthoritativePublicMatch {
     this.statusBanner = null;
     this.collectedRelayIds.clear();
     this.activatedPanelIds.clear();
+    this.containers = this.seedContainers();
     this.pickups = this.seedPickups();
+    this.looseItems = [];
+    this.projectiles = [];
     this.stalkers = this.seedStalkers();
   }
 
@@ -963,7 +1454,10 @@ export class AuthoritativePublicMatch {
     this.extractionStartedAt = null;
     this.statusBanner = null;
     this.results = null;
+    this.containers = [];
     this.pickups = [];
+    this.looseItems = [];
+    this.projectiles = [];
     this.stalkers = [];
     this.collectedRelayIds.clear();
     this.activatedPanelIds.clear();
@@ -985,6 +1479,7 @@ export class AuthoritativePublicMatch {
       reason,
       players
     };
+    this.projectiles = [];
     this.phase = "results";
     this.phaseChangedAt = now;
     const reasonLabel = reason === "extraction" ? "Extraction resolved." : reason === "timeout" ? "Round failed. Time expired." : "Round failed. Team wiped.";
@@ -1027,6 +1522,77 @@ export class AuthoritativePublicMatch {
         collected: false
       }];
     });
+  }
+
+  private seedContainers(): MatchContainerState[] {
+    return SEARCHABLE_CONTAINERS.map((container) => ({
+      id: container.id,
+      label: container.label,
+      x: container.x,
+      y: container.y,
+      areaId: container.areaId,
+      interactionRadius: container.interactionRadius,
+      items: rollContainerContents(container.lootProfile, container.assetId, this.random)
+    }));
+  }
+
+  private createEmptyInventorySlots(): (InventoryItemType | null)[] {
+    return Array.from({ length: INVENTORY_SLOT_COUNT }, () => null);
+  }
+
+  private createInitialInventorySlots(): (InventoryItemType | null)[] {
+    const slots = this.createEmptyInventorySlots();
+    slots[0] = "pistol_9mm";
+    return slots;
+  }
+
+  private tryAddInventoryItem(player: MatchPlayerState, item: InventoryItemType): boolean {
+    const slotIndex = player.inventorySlots.findIndex((candidate) => candidate === null);
+    if (slotIndex < 0) {
+      return false;
+    }
+
+    player.inventorySlots[slotIndex] = item;
+    return true;
+  }
+
+  private clearInventorySlot(player: MatchPlayerState, slotIndex: number): void {
+    player.inventorySlots[slotIndex] = null;
+    if (player.activeInventorySlotIndex === slotIndex) {
+      player.activeInventorySlotIndex = null;
+    }
+  }
+
+  private toInventorySnapshot(player: MatchPlayerState): MatchInventorySnapshot {
+    return {
+      capacity: INVENTORY_SLOT_COUNT,
+      activeSlotIndex: player.activeInventorySlotIndex,
+      slots: [...player.inventorySlots],
+      ammo9mmReserve: player.ammo9mmReserve
+    };
+  }
+
+  private toOpenedContainerSnapshot(container: MatchContainerState): MatchOpenedContainerSnapshot {
+    return {
+      id: container.id,
+      label: container.label,
+      itemCount: container.items.length,
+      items: [...container.items]
+    };
+  }
+
+  private toProjectileSnapshot(projectile: MatchProjectileState): MatchProjectileSnapshot {
+    return {
+      id: projectile.id,
+      ownerId: projectile.ownerId,
+      x: projectile.x,
+      y: projectile.y,
+      facing: {
+        ...projectile.facing
+      },
+      distanceRemaining: projectile.distanceRemaining,
+      maxDistance: projectile.maxDistance
+    };
   }
 
   private seedStalkers(): MatchStalkerState[] {
@@ -1072,6 +1638,78 @@ export class AuthoritativePublicMatch {
     for (const player of this.players.values()) {
       player.punchTimeRemainingMs = Math.max(0, player.punchTimeRemainingMs - deltaMs);
     }
+  }
+
+  private tickProjectiles(deltaMs: number, now: number): void {
+    if (this.projectiles.length <= 0) {
+      return;
+    }
+
+    for (let index = this.projectiles.length - 1; index >= 0; index -= 1) {
+      const projectile = this.projectiles[index];
+      if (!projectile) {
+        continue;
+      }
+
+      let travelRemaining = Math.min(projectile.distanceRemaining, projectile.speed * (deltaMs / 1000));
+      let removeProjectile = false;
+      while (travelRemaining > 0.001 && !removeProjectile) {
+        const stepDistance = Math.min(8, travelRemaining);
+        const nextX = projectile.x + projectile.facing.x * stepDistance;
+        const nextY = projectile.y + projectile.facing.y * stepDistance;
+        if (!this.canOccupy(nextX, nextY, projectile.radius)) {
+          removeProjectile = true;
+          break;
+        }
+
+        projectile.x = nextX;
+        projectile.y = nextY;
+        projectile.distanceRemaining = Math.max(0, projectile.distanceRemaining - stepDistance);
+        travelRemaining -= stepDistance;
+        if (this.resolveProjectileHit(projectile, now)) {
+          removeProjectile = true;
+          break;
+        }
+
+        if (projectile.distanceRemaining <= 0.001) {
+          removeProjectile = true;
+        }
+      }
+
+      if (removeProjectile) {
+        this.projectiles.splice(index, 1);
+      }
+    }
+  }
+
+  private resolveProjectileHit(projectile: MatchProjectileState, now: number): boolean {
+    for (const stalker of this.stalkers) {
+      if (stalker.isDead) {
+        continue;
+      }
+
+      if (!circleIntersectsRect(projectile.x, projectile.y, projectile.radius, this.stalkerCombatHitbox(stalker))) {
+        continue;
+      }
+
+      this.damageStalkerState(stalker, projectile.damage);
+      return true;
+    }
+
+    for (const player of this.players.values()) {
+      if (player.id === projectile.ownerId || player.isDead || this.isDamageProtected(player, now)) {
+        continue;
+      }
+
+      if (!circlesIntersect(projectile.x, projectile.y, projectile.radius, player.x, player.y, PLAYER_RADIUS)) {
+        continue;
+      }
+
+      this.damagePlayerState(player, projectile.damage, now);
+      return true;
+    }
+
+    return false;
   }
 
   private tickStalkers(deltaMs: number, now: number): void {
@@ -1429,6 +2067,22 @@ export class AuthoritativePublicMatch {
     return true;
   }
 
+  private visibleShotDistanceForPlayer(player: MatchPlayerState, facing: MatchVector): number {
+    const cameraX = clamp(player.x - GAME_MANIFEST.width * 0.5, 0, WORLD_WIDTH - GAME_MANIFEST.width);
+    const cameraY = clamp(player.y - GAME_MANIFEST.height * 0.5, 0, WORLD_HEIGHT - GAME_MANIFEST.height);
+    const leftDistance = Math.max(1, player.x - cameraX);
+    const rightDistance = Math.max(1, cameraX + GAME_MANIFEST.width - player.x);
+    const upDistance = Math.max(1, player.y - cameraY);
+    const downDistance = Math.max(1, cameraY + GAME_MANIFEST.height - player.y);
+    const horizontalDistance = Math.abs(facing.x) <= 0.001
+      ? Number.POSITIVE_INFINITY
+      : (facing.x < 0 ? leftDistance : rightDistance) / Math.abs(facing.x);
+    const verticalDistance = Math.abs(facing.y) <= 0.001
+      ? Number.POSITIVE_INFINITY
+      : (facing.y < 0 ? upDistance : downDistance) / Math.abs(facing.y);
+    return Math.max(24, Math.min(horizontalDistance, verticalDistance) - 8);
+  }
+
   private currentAreaAt(x: number, y: number, padding = 0): typeof AREAS[number] | null {
     const matches = AREAS.filter((area) => rectContainsPoint(area, x, y, padding));
     if (matches.length === 0) {
@@ -1596,6 +2250,7 @@ export class AuthoritativePublicMatch {
     player.speedBoostEndsAt = null;
     player.punchCooldownEndsAt = null;
     player.punchTimeRemainingMs = 0;
+    player.fireCooldownEndsAt = null;
     if (!this.hasActiveLivingPlayers() && this.isRoundActive()) {
       this.finishRound("wipe", now);
     }
@@ -1643,7 +2298,8 @@ export class AuthoritativePublicMatch {
         player.speedBoostEndsAt === null ? null : Math.max(0, player.speedBoostEndsAt - now),
       punchTimeRemainingMs: player.punchTimeRemainingMs > 0 ? player.punchTimeRemainingMs : null,
       punchFacing: player.punchTimeRemainingMs > 0 ? player.punchFacing : null,
-      punchArmSide: player.punchTimeRemainingMs > 0 ? player.punchArmSide : null
+      punchArmSide: player.punchTimeRemainingMs > 0 ? player.punchArmSide : null,
+      inventory: this.toInventorySnapshot(player)
     };
   }
 

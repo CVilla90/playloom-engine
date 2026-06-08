@@ -13,6 +13,20 @@ export interface PlayerTuning {
     readonly cooldown: number;
     readonly animationDuration: number;
   };
+  readonly pistol9mm: {
+    readonly damage: number;
+    readonly cooldown: number;
+    readonly projectileSpeed: number;
+    readonly projectileRadius: number;
+    readonly tracerLength: number;
+    readonly muzzleFlashDuration: number;
+    readonly shotVolume: number;
+    readonly remoteShotVolume: number;
+    readonly cameraRecoil: number;
+    readonly soundRange: number;
+    readonly ammoPerBox: number;
+    readonly startingReserve: number;
+  };
 }
 
 export interface StalkerTuning {
@@ -53,6 +67,20 @@ export const PLAYER_TUNING: PlayerTuning = {
     damage: 10,
     cooldown: 0.24,
     animationDuration: 0.18
+  },
+  pistol9mm: {
+    damage: 20,
+    cooldown: 0.2,
+    projectileSpeed: 740,
+    projectileRadius: 2.5,
+    tracerLength: 18,
+    muzzleFlashDuration: 0.08,
+    shotVolume: 0.28,
+    remoteShotVolume: 0.24,
+    cameraRecoil: 1.75,
+    soundRange: 680,
+    ammoPerBox: 24,
+    startingReserve: 100
   }
 };
 

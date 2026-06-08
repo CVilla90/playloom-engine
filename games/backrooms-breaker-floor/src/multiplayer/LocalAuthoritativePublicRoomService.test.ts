@@ -94,6 +94,24 @@ describe("LocalAuthoritativePublicRoomService", () => {
     expect(room.getMatchSnapshot()?.stalkers[0]?.health).toBeLessThan(initialStalker!.health);
   });
 
+  it("fires the equipped pistol through the room service and spends reserve ammo", () => {
+    const room = new LocalAuthoritativePublicRoomService({
+      now: 8_800,
+      random: () => 0.2
+    });
+
+    expect(room.join("Piper").ok).toBe(true);
+    const player = room.getLocalPlayerMatchSnapshot();
+    expect(player?.inventory.slots[0]).toBe("pistol_9mm");
+    expect(player?.inventory.ammo9mmReserve).toBe(100);
+
+    const shot = room.fireEquippedItem({ x: 1, y: 0 }, 8_900);
+    expect(shot.ok).toBe(true);
+    expect(shot.value?.ownerId).toBe(player?.id);
+    expect(room.getMatchSnapshot()?.players[0]?.inventory.ammo9mmReserve).toBe(99);
+    expect((room.getMatchSnapshot()?.projectiles.length ?? 0) > 0).toBe(true);
+  });
+
   it("syncs and damages the primary stalker through the room service", () => {
     const room = new LocalAuthoritativePublicRoomService({
       now: 9_000,

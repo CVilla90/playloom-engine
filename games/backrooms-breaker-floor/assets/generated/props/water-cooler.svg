@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="108" viewBox="0 0 72 108">
+  <defs>
+    <linearGradient id="coolerMetal" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#a8adb0"/>
+      <stop offset="100%" stop-color="#656b70"/>
+    </linearGradient>
+    <linearGradient id="jug" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#9ee9ff"/>
+      <stop offset="100%" stop-color="#4ba2c4"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="36" cy="92" rx="16" ry="6" fill="#000000" opacity="0.16"/>
+
+  <g stroke-linejoin="round">
+    <path d="M27 25 L41 23 L46 28 L32 30 Z" fill="#d7f8ff" stroke="#4d8aa0" stroke-width="1.2"/>
+    <path d="M27 25 L27 39 L32 42 L32 30 Z" fill="#5fb0ce" stroke="#4d8aa0" stroke-width="1.2"/>
+    <path d="M32 30 L46 28 L46 42 L32 44 Z" fill="url(#jug)" stroke="#4d8aa0" stroke-width="1.2"/>
+
+    <path d="M24 42 L44 39 L49 43 L29 46 Z" fill="#d3d8dc" stroke="#4a5258" stroke-width="1.2"/>
+    <path d="M24 42 L24 76 L29 80 L29 46 Z" fill="#737c82" stroke="#4a5258" stroke-width="1.2"/>
+    <path d="M29 46 L49 43 L49 80 L29 83 Z" fill="url(#coolerMetal)" stroke="#4a5258" stroke-width="1.2"/>
+
+    <rect x="31.5" y="52" width="6" height="6" rx="1.2" fill="#8de4ff" stroke="#315767" stroke-width="1"/>
+    <rect x="39" y="51" width="6" height="6" rx="1.2" fill="#efcf79" stroke="#6b5730" stroke-width="1"/>
+    <path d="M34.5 58 L34.5 63" stroke="#315767" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M42 57 L42 62" stroke="#6b5730" stroke-width="1.2" stroke-linecap="round"/>
+
+    <path d="M29 83 L33 91" stroke="#51575b" stroke-width="2" stroke-linecap="round"/>
+    <path d="M46 80 L42 91" stroke="#51575b" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>

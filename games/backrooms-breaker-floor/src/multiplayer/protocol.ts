@@ -1,3 +1,4 @@
+import type { InventoryItemType } from "../inventory";
 import type { PickupType } from "../pickups";
 import type {
   PublicRoundResults,
@@ -28,6 +29,7 @@ export interface MatchPlayerSnapshot {
   readonly punchTimeRemainingMs: number | null;
   readonly punchFacing: MatchVector | null;
   readonly punchArmSide: -1 | 1 | null;
+  readonly inventory: MatchInventorySnapshot;
 }
 
 export interface MatchObjectiveSnapshot {
@@ -43,6 +45,38 @@ export interface MatchPickupSnapshot {
   readonly y: number;
   readonly radius: number;
   readonly collected: boolean;
+}
+
+export interface MatchInventorySnapshot {
+  readonly capacity: number;
+  readonly activeSlotIndex: number | null;
+  readonly slots: readonly (InventoryItemType | null)[];
+  readonly ammo9mmReserve: number;
+}
+
+export interface MatchOpenedContainerSnapshot {
+  readonly id: string;
+  readonly label: string;
+  readonly itemCount: number;
+  readonly items: readonly InventoryItemType[];
+}
+
+export interface MatchLooseItemSnapshot {
+  readonly id: string;
+  readonly type: InventoryItemType;
+  readonly x: number;
+  readonly y: number;
+  readonly collected: boolean;
+}
+
+export interface MatchProjectileSnapshot {
+  readonly id: string;
+  readonly ownerId: string;
+  readonly x: number;
+  readonly y: number;
+  readonly facing: MatchVector;
+  readonly distanceRemaining: number;
+  readonly maxDistance: number;
 }
 
 export type MatchStalkerMode = "roam" | "chase" | "swarm";
@@ -89,6 +123,8 @@ export interface MatchSnapshot {
   readonly objectives: MatchObjectiveSnapshot;
   readonly players: readonly MatchPlayerSnapshot[];
   readonly pickups: readonly MatchPickupSnapshot[];
+  readonly looseItems: readonly MatchLooseItemSnapshot[];
+  readonly projectiles: readonly MatchProjectileSnapshot[];
   readonly stalkers: readonly MatchStalkerSnapshot[];
   readonly statusBanner: PublicRoomStatusBanner | null;
   readonly results: PublicRoundResults | null;
@@ -117,7 +153,7 @@ export interface LeaveRequestMessage {
 export interface InteractionRequestMessage {
   readonly type: "interaction_request";
   readonly targetId: string;
-  readonly targetKind: "pickup" | "relay" | "panel" | "exit";
+  readonly targetKind: "pickup" | "relay" | "panel" | "exit" | "container" | "loose_item";
 }
 
 export interface PunchRequestMessage {
@@ -125,12 +161,38 @@ export interface PunchRequestMessage {
   readonly facing: MatchVector;
 }
 
+export interface FireEquippedRequestMessage {
+  readonly type: "fire_equipped_request";
+  readonly facing: MatchVector;
+}
+
+export interface ContainerTakeRequestMessage {
+  readonly type: "container_take_request";
+  readonly containerId: string;
+  readonly itemIndex: number;
+}
+
+export interface ContainerTakeAllRequestMessage {
+  readonly type: "container_take_all_request";
+  readonly containerId: string;
+}
+
+export interface InventoryActionRequestMessage {
+  readonly type: "inventory_action_request";
+  readonly action: "use" | "drop" | "set_active";
+  readonly slotIndex: number;
+}
+
 export type ClientMessage =
   | JoinRequestMessage
   | LeaveRequestMessage
   | InputUpdateMessage
   | InteractionRequestMessage
-  | PunchRequestMessage;
+  | PunchRequestMessage
+  | FireEquippedRequestMessage
+  | ContainerTakeRequestMessage
+  | ContainerTakeAllRequestMessage
+  | InventoryActionRequestMessage;
 
 export interface JoinAcceptedMessage {
   readonly type: "join_accepted";
@@ -169,6 +231,11 @@ export interface PunchResolvedMessage {
   readonly result: MatchPunchResult;
 }
 
+export interface ContainerOpenedMessage {
+  readonly type: "container_opened";
+  readonly container: MatchOpenedContainerSnapshot;
+}
+
 export type ServerMessage =
   | JoinAcceptedMessage
   | JoinRejectedMessage
@@ -176,4 +243,5 @@ export type ServerMessage =
   | StatusMessage
   | PhaseChangedMessage
   | RoundResultsMessage
-  | PunchResolvedMessage;
+  | PunchResolvedMessage
+  | ContainerOpenedMessage;

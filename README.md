@@ -99,12 +99,14 @@ npm run export:arcade -- <game-id>
 What it does:
 - builds the chosen game with relative asset paths
 - writes the export to `../playloom-arcade/runtime/<game-id>/`
+- if the game manifest defines `serverEntry`, bundles that Node server to `../playloom-arcade/game-servers/<game-id>.mjs`
 - leaves the main engine `index.html` unchanged
 
 After export:
 1. confirm `playloom-arcade/runtime/<game-id>/index.html` exists
 2. set that game's `deployment.status` to `"live"` in `playloom-arcade/site-data.js`
 3. keep `deployment.runtimePath` pointed at `/runtime/<game-id>/index.html`
+4. for multiplayer/server games, deploy the matching `game-servers/<game-id>.mjs` bundle with the arcade runtime
 
 ## Boundary Rules
 - Allowed:
@@ -152,6 +154,15 @@ Minimal manifest example:
     "key": "my-game.save.v1",
     "version": 1
   }
+}
+```
+
+`serverEntry` is optional. Use it only for games that need a Node-side game server; it must point to a file inside that game's folder.
+Example:
+
+```json
+{
+  "serverEntry": "src/multiplayer/server/server-entry.ts"
 }
 ```
 

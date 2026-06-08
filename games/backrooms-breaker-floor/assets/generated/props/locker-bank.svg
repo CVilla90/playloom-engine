@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="112" viewBox="0 0 96 112">
+  <defs>
+    <linearGradient id="lockerBody" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#c8b483"/>
+      <stop offset="100%" stop-color="#8f7852"/>
+    </linearGradient>
+    <linearGradient id="lockerSide" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#9f8964"/>
+      <stop offset="100%" stop-color="#67563c"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="48" cy="98" rx="32" ry="9" fill="#000000" opacity="0.18"/>
+
+  <g stroke="#564933" stroke-width="1.4" stroke-linejoin="round">
+    <path d="M18 28 L72 20 L82 28 L28 36 Z" fill="#ddca95"/>
+    <path d="M18 28 L18 82 L28 90 L28 36 Z" fill="url(#lockerSide)"/>
+    <path d="M28 36 L82 28 L82 82 L28 90 Z" fill="url(#lockerBody)"/>
+
+    <line x1="46" y1="32.5" x2="46" y2="87" stroke="#6b5a40"/>
+    <line x1="64" y1="30.5" x2="64" y2="85" stroke="#6b5a40"/>
+
+    <g stroke-width="1">
+      <line x1="34" y1="41" x2="42" y2="40"/>
+      <line x1="34" y1="45" x2="42" y2="44"/>
+      <line x1="34" y1="49" x2="42" y2="48"/>
+      <line x1="52" y1="39" x2="60" y2="38"/>
+      <line x1="52" y1="43" x2="60" y2="42"/>
+      <line x1="52" y1="47" x2="60" y2="46"/>
+      <line x1="70" y1="37" x2="78" y2="36"/>
+      <line x1="70" y1="41" x2="78" y2="40"/>
+      <line x1="70" y1="45" x2="78" y2="44"/>
+    </g>
+
+    <g fill="#4d4030">
+      <rect x="39" y="58" width="2.8" height="14" rx="1.4"/>
+      <rect x="57" y="56" width="2.8" height="14" rx="1.4"/>
+      <rect x="75" y="54" width="2.8" height="14" rx="1.4"/>
+    </g>
+
+    <g fill="#ead8a3" opacity="0.58" stroke="none">
+      <path d="M31 40 L43 38.8 L43 84.2 L31 86 Z"/>
+      <path d="M49 38 L61 36.8 L61 82.2 L49 84 Z"/>
+    </g>
+  </g>
+</svg>

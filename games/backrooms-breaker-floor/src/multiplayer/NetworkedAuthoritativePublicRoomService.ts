@@ -17,8 +17,11 @@ import {
 } from "./roomModel";
 import type {
   ClientMessage,
+  MatchInventorySnapshot,
+  MatchOpenedContainerSnapshot,
   MatchPunchResult,
   MatchPlayerSnapshot,
+  MatchProjectileSnapshot,
   MatchSnapshot,
   MatchStalkerSnapshot,
   ServerMessage
@@ -77,6 +80,7 @@ export class NetworkedAuthoritativePublicRoomService implements PublicRoomServic
   private lastSentInputState: LocalPlayerSyncState | null = null;
   private lastSentInputAt = 0;
   private pendingLocalPunchResults: MatchPunchResult[] = [];
+  private pendingOpenedContainers: MatchOpenedContainerSnapshot[] = [];
   private snapshot: PublicRoomSnapshot;
 
   constructor(options: NetworkedAuthoritativePublicRoomServiceOptions = {}) {
@@ -111,10 +115,20 @@ export class NetworkedAuthoritativePublicRoomService implements PublicRoomServic
     return this.predictedLocalPlayerSnapshot ?? this.authoritativeLocalPlayerSnapshot();
   }
 
+  getLocalInventorySnapshot(): MatchInventorySnapshot | null {
+    return this.getLocalPlayerMatchSnapshot()?.inventory ?? null;
+  }
+
   consumeLocalPunchResults(): readonly MatchPunchResult[] {
     const results = this.pendingLocalPunchResults;
     this.pendingLocalPunchResults = [];
     return results;
+  }
+
+  consumeOpenedContainers(): readonly MatchOpenedContainerSnapshot[] {
+    const opened = this.pendingOpenedContainers;
+    this.pendingOpenedContainers = [];
+    return opened;
   }
 
   getPreferredName(): string {
@@ -229,20 +243,150 @@ export class NetworkedAuthoritativePublicRoomService implements PublicRoomServic
     };
   }
 
+  fireEquippedItem(facing: { x: number; y: number }, _now = Date.now()): RoomActionResult<MatchProjectileSnapshot> {
+    if (!this.canSendGameplayActions()) {
+      return {
+        ok: false,
+        reason: this.transportError ?? this.joinError ?? "Public room connection is unavailable.",
+        value: null
+      };
+    }
+
+    const localPlayer = this.getLocalPlayerMatchSnapshot();
+    const activeSlotIndex = localPlayer?.inventory.activeSlotIndex ?? null;
+    const activeItem = activeSlotIndex === null ? null : (localPlayer?.inventory.slots[activeSlotIndex] ?? null);
+    if (activeItem !== "pistol_9mm") {
+      return {
+        ok: false,
+        reason: "Equip the 9mm pistol first.",
+        value: null
+      };
+    }
+
+    if ((localPlayer?.inventory.ammo9mmReserve ?? 0) <= 0) {
+      return {
+        ok: false,
+        reason: "The 9mm is dry.",
+        value: null
+      };
+    }
+
+    this.send({
+      type: "fire_equipped_request",
+      facing
+    });
+    return {
+      ok: true,
+      reason: null,
+      value: null
+    };
+  }
+
+  openContainer(containerId: string, _now = Date.now()): RoomActionResult<MatchOpenedContainerSnapshot> {
+    const result = this.sendInteractionRequest("container", containerId);
+    return {
+      ok: result.ok,
+      reason: result.reason,
+      value: null
+    };
+  }
+
+  takeContainerItem(containerId: string, itemIndex: number, _now = Date.now()): RoomActionResult<MatchOpenedContainerSnapshot> {
+    if (!this.canSendGameplayActions()) {
+      return {
+        ok: false,
+        reason: this.transportError ?? this.joinError ?? "Public room connection is unavailable.",
+        value: null
+      };
+    }
+
+    this.send({
+      type: "container_take_request",
+      containerId,
+      itemIndex
+    });
+    return {
+      ok: true,
+      reason: null,
+      value: null
+    };
+  }
+
+  takeAllContainerItems(containerId: string, _now = Date.now()): RoomActionResult<MatchOpenedContainerSnapshot> {
+    if (!this.canSendGameplayActions()) {
+      return {
+        ok: false,
+        reason: this.transportError ?? this.joinError ?? "Public room connection is unavailable.",
+        value: null
+      };
+    }
+
+    this.send({
+      type: "container_take_all_request",
+      containerId
+    });
+    return {
+      ok: true,
+      reason: null,
+      value: null
+    };
+  }
+
   collectPickup(pickupId: string, _now = Date.now()): RoomActionResult<MatchSnapshot> {
-    return this.sendInteractionRequest("pickup", pickupId);
+    const result = this.sendInteractionRequest("pickup", pickupId);
+    return {
+      ok: result.ok,
+      reason: result.reason,
+      value: null
+    };
+  }
+
+  collectLooseItem(itemId: string, _now = Date.now()): RoomActionResult<MatchSnapshot> {
+    const result = this.sendInteractionRequest("loose_item", itemId);
+    return {
+      ok: result.ok,
+      reason: result.reason,
+      value: null
+    };
   }
 
   collectRelay(relayId: string, _now = Date.now()): RoomActionResult<MatchSnapshot> {
-    return this.sendInteractionRequest("relay", relayId);
+    const result = this.sendInteractionRequest("relay", relayId);
+    return {
+      ok: result.ok,
+      reason: result.reason,
+      value: null
+    };
   }
 
   activatePanel(panelId: string, _now = Date.now()): RoomActionResult<MatchSnapshot> {
-    return this.sendInteractionRequest("panel", panelId);
+    const result = this.sendInteractionRequest("panel", panelId);
+    return {
+      ok: result.ok,
+      reason: result.reason,
+      value: null
+    };
   }
 
   startExtraction(_now = Date.now()): RoomActionResult<MatchSnapshot> {
-    return this.sendInteractionRequest("exit", "exit-terminal");
+    const result = this.sendInteractionRequest("exit", "exit-terminal");
+    return {
+      ok: result.ok,
+      reason: result.reason,
+      value: null
+    };
+  }
+
+  useInventorySlot(slotIndex: number, _now = Date.now()): RoomActionResult<MatchPlayerSnapshot> {
+    return this.sendInventoryAction("use", slotIndex);
+  }
+
+  setActiveInventorySlot(slotIndex: number, _now = Date.now()): RoomActionResult<MatchPlayerSnapshot> {
+    return this.sendInventoryAction("set_active", slotIndex);
+  }
+
+  dropInventorySlot(slotIndex: number, _now = Date.now()): RoomActionResult<MatchPlayerSnapshot> {
+    return this.sendInventoryAction("drop", slotIndex);
   }
 
   applyLocalPlayerDamage(_amount: number, _now = Date.now()): RoomActionResult<MatchPlayerSnapshot> {
@@ -348,6 +492,9 @@ export class NetworkedAuthoritativePublicRoomService implements PublicRoomServic
       case "punch_resolved":
         this.pendingLocalPunchResults.push(message.result);
         break;
+      case "container_opened":
+        this.pendingOpenedContainers.push(message.container);
+        break;
     }
 
     this.predictedLocalPlayerSnapshot = reconcilePredictedLocalPlayerSnapshot(
@@ -394,9 +541,9 @@ export class NetworkedAuthoritativePublicRoomService implements PublicRoomServic
   }
 
   private sendInteractionRequest(
-    targetKind: "pickup" | "relay" | "panel" | "exit",
+    targetKind: "pickup" | "relay" | "panel" | "exit" | "container" | "loose_item",
     targetId: string
-  ): RoomActionResult<MatchSnapshot> {
+  ): RoomActionResult<null> {
     if (!this.canSendGameplayActions()) {
       return {
         ok: false,
@@ -409,6 +556,30 @@ export class NetworkedAuthoritativePublicRoomService implements PublicRoomServic
       type: "interaction_request",
       targetKind,
       targetId
+    });
+    return {
+      ok: true,
+      reason: null,
+      value: null
+    };
+  }
+
+  private sendInventoryAction(
+    action: "use" | "drop" | "set_active",
+    slotIndex: number
+  ): RoomActionResult<MatchPlayerSnapshot> {
+    if (!this.canSendGameplayActions()) {
+      return {
+        ok: false,
+        reason: this.transportError ?? this.joinError ?? "Public room connection is unavailable.",
+        value: null
+      };
+    }
+
+    this.send({
+      type: "inventory_action_request",
+      action,
+      slotIndex
     });
     return {
       ok: true,

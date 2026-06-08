@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="84" viewBox="0 0 108 84">
+  <defs>
+    <linearGradient id="cartMetal" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#9ca3a8"/>
+      <stop offset="100%" stop-color="#596065"/>
+    </linearGradient>
+    <linearGradient id="cartShelf" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#d6c39a"/>
+      <stop offset="100%" stop-color="#907651"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="54" cy="66" rx="30" ry="7" fill="#000000" opacity="0.16"/>
+
+  <g stroke-linejoin="round">
+    <path d="M22 30 L68 24 L84 34 L38 40 Z" fill="url(#cartShelf)" stroke="#5c4c37" stroke-width="1.4"/>
+    <path d="M26 16 L72 10 L88 20 L42 26 Z" fill="#e1d0a9" stroke="#6b5a43" stroke-width="1.3"/>
+    <path d="M38 40 L84 34 L84 48 L38 54 Z" fill="#81674a" stroke="#5c4c37" stroke-width="1.4"/>
+    <path d="M42 26 L88 20 L88 34 L42 40 Z" fill="#9a7e58" stroke="#6b5a43" stroke-width="1.3"/>
+
+    <path d="M28 19 L28 57" stroke="url(#cartMetal)" stroke-width="3"/>
+    <path d="M82 12 L82 50" stroke="url(#cartMetal)" stroke-width="3"/>
+    <path d="M33 58 L87 51" stroke="#676e73" stroke-width="3"/>
+
+    <rect x="47" y="15" width="10" height="6" rx="1.2" fill="#c5bea9" stroke="#59544a" stroke-width="1"/>
+    <rect x="49" y="28" width="10" height="6" rx="1.2" fill="#c5bea9" stroke="#59544a" stroke-width="1"/>
+
+    <circle cx="32" cy="61" r="4" fill="#2e3236" stroke="#5d6267" stroke-width="1.1"/>
+    <circle cx="78" cy="56" r="4" fill="#2e3236" stroke="#5d6267" stroke-width="1.1"/>
+  </g>
+</svg>

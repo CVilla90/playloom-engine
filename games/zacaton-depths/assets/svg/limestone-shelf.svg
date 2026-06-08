@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 72" role="img" aria-label="limestone wall shelf">
+  <defs>
+    <linearGradient id="shelf" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#84918a"/>
+      <stop offset="1" stop-color="#273235"/>
+    </linearGradient>
+  </defs>
+  <g stroke-linejoin="round">
+    <path d="M4 35c20-15 47-20 76-15 18 3 34 10 44 19-20 7-42 10-68 8-19-1-37-5-52-12z" fill="url(#shelf)" stroke="#121b1d" stroke-width="2"/>
+    <path d="M20 37c26-7 52-10 86 2M44 25c-2 9-2 16 0 22M78 23c-4 8-5 16-2 25" fill="none" stroke="#b6bfac" stroke-opacity=".32" stroke-width="2"/>
+  </g>
+</svg>

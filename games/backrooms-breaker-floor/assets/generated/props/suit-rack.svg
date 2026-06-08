@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="112" height="112" viewBox="0 0 112 112">
+  <defs>
+    <linearGradient id="rackMetal" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#9ea3a7"/>
+      <stop offset="100%" stop-color="#565d62"/>
+    </linearGradient>
+    <linearGradient id="suitYellow" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#efe084"/>
+      <stop offset="100%" stop-color="#b89535"/>
+    </linearGradient>
+    <linearGradient id="suitOrange" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#d9b173"/>
+      <stop offset="100%" stop-color="#8b6437"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="56" cy="98" rx="30" ry="8" fill="#000000" opacity="0.18"/>
+
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M28 28 L84 22" stroke="url(#rackMetal)" stroke-width="4"/>
+    <path d="M34 24 L34 92" stroke="#5a6065" stroke-width="4"/>
+    <path d="M78 20 L78 92" stroke="#5a6065" stroke-width="4"/>
+    <path d="M20 92 L92 92" stroke="#4b5156" stroke-width="5"/>
+
+    <path d="M40 38 L44 32" stroke="#6f767b" stroke-width="2.4"/>
+    <path d="M56 36 L60 30" stroke="#6f767b" stroke-width="2.4"/>
+    <path d="M72 34 L76 28" stroke="#6f767b" stroke-width="2.4"/>
+
+    <path d="M34 44 L44 39 L52 44 L55 64 L42 68 L31 64 Z" fill="url(#suitYellow)" stroke="#72591a" stroke-width="1.4"/>
+    <path d="M51 42 L60 37 L68 42 L71 62 L59 67 L48 62 Z" fill="#4e5b63" stroke="#263036" stroke-width="1.3"/>
+    <path d="M68 40 L78 35 L86 40 L89 60 L77 65 L66 60 Z" fill="url(#suitOrange)" stroke="#6b4b25" stroke-width="1.4"/>
+
+    <circle cx="42" cy="76" r="4" fill="#394146"/>
+    <circle cx="60" cy="74" r="4" fill="#20262a"/>
+    <circle cx="78" cy="72" r="4" fill="#394146"/>
+  </g>
+</svg>

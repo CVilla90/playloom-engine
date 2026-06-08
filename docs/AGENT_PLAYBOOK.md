@@ -21,6 +21,7 @@
 3. Every game must keep:
    - `game.manifest.json`
    - `assets/asset.manifest.json`
+   - optional `serverEntry` paths inside the owning game folder only
 4. Never import from one game into another game.
 5. Engine packages must never import from `games/*`.
 
@@ -33,6 +34,7 @@
 6. `npm run asset:gen -- sprite orbital-miners rover --frames 6 --size 48 --fps 10`
 7. `npm run asset:gen -- sfx orbital-miners pickup --preset pickup --duration 0.35`
 8. `npm run asset:gen -- music-loop orbital-miners base-loop --preset ambient --duration 8`
+9. `npm run export:arcade -- orbital-miners`
 
 ## AI-First Reuse Defaults
 1. Use `ZoneMap` + `PlatformerController` for platform movement states.

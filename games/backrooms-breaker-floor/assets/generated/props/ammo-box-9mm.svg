@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="48" viewBox="0 0 60 48">
+  <defs>
+    <linearGradient id="ammoTop" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#d6be8f"/>
+      <stop offset="100%" stop-color="#9c7d49"/>
+    </linearGradient>
+    <linearGradient id="ammoFront" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#9f8557"/>
+      <stop offset="100%" stop-color="#654e31"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="30" cy="38" rx="12" ry="4" fill="#000000" opacity="0.12"/>
+
+  <g stroke-linejoin="round">
+    <path d="M18 18 L31 15 L37 19 L24 22 Z" fill="url(#ammoTop)" stroke="#5b472c" stroke-width="1"/>
+    <path d="M18 18 L18 28 L24 32 L24 22 Z" fill="#826642" stroke="#5b472c" stroke-width="1"/>
+    <path d="M24 22 L37 19 L37 32 L24 35 Z" fill="url(#ammoFront)" stroke="#5b472c" stroke-width="1.1"/>
+    <text x="30.5" y="30" fill="#f2e1ba" font-family="Trebuchet MS, sans-serif" font-size="5.5" font-weight="700" text-anchor="middle">9MM</text>
+  </g>
+</svg>
