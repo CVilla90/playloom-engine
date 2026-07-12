@@ -177,6 +177,34 @@
       "source": "games/wangan-zero/tools/generate-kagero-vx-car-sprites.mjs"
     },
     {
+      "id": "police_car_yaw_000",
+      "kind": "image",
+      "path": "police-car-frames/police-car-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-police-car-sprites.mjs"
+    },
+    {
+      "id": "police_car_yaw_004",
+      "kind": "image",
+      "path": "police-car-frames/police-car-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-police-car-sprites.mjs"
+    },
+    {
+      "id": "police_car_front_yaw_000",
+      "kind": "image",
+      "path": "police-car-frames/police-car-front-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-police-car-sprites.mjs"
+    },
+    {
+      "id": "police_car_front_yaw_004",
+      "kind": "image",
+      "path": "police-car-frames/police-car-front-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-police-car-sprites.mjs"
+    },
+    {
       "id": "reimei_xr_yaw_000",
       "kind": "image",
       "path": "reimei-xr-car-frames/reimei-xr-yaw-000.png",

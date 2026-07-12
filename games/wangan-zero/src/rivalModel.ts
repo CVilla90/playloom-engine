@@ -23,7 +23,13 @@ import {
   type LaneChangeIntent
 } from "./laneChangeModel";
 
-export type RivalVehicleKind = "shirokage" | "shirokageRed" | "hibanaRs" | "aonamiGt" | "kageroVx";
+export type RivalVehicleKind =
+  | "shirokage"
+  | "shirokageRed"
+  | "hibanaRs"
+  | "aonamiGt"
+  | "kageroVx"
+  | "police";
 
 export interface RivalDefinition {
   readonly id: string;
@@ -36,6 +42,8 @@ export interface RivalDefinition {
   readonly brakingKphPerSecond: number;
   readonly reactionDistanceMeters: number;
   readonly laneChangeCooldownSeconds: number;
+  /** Pursuit units hunt the nearest session player instead of free-running. */
+  readonly pursuit?: boolean;
 }
 
 export interface RivalState {
@@ -51,6 +59,9 @@ export interface RivalState {
   readonly laneChangeCooldown: number;
   readonly laneChange?: LaneChangeIntent | null;
   readonly cycle: number;
+  /** Per-session performance overrides (the police interceptor rolls these). */
+  readonly maxSpeedKphOverride?: number;
+  readonly accelerationMultiplierOverride?: number;
 }
 
 export interface RivalObstacle {
@@ -62,17 +73,24 @@ export interface RivalObstacle {
   readonly trainPartner?: boolean;
 }
 
+/** One human player as rivals see it, in the same frame as rival relativeMeters. */
+export interface RivalSessionPlayer {
+  readonly relativeMeters: number;
+  readonly lane: TrafficLane;
+  readonly speedKph: number;
+}
+
 export interface RivalStepInput {
   readonly playerSpeedKph: number;
   readonly playerLane: TrafficLane;
   readonly obstacles: readonly RivalObstacle[];
   readonly dt: number;
   /**
-   * Relative positions (same frame as rival relativeMeters) of every human
-   * player able to wake a rival into its encounter/racing mode. Defaults to
-   * just the primary player at 0, preserving single-player behavior.
+   * Every human player in the session: any of them can wake a rival into its
+   * encounter/racing mode, and pursuit units hunt the nearest one. Defaults
+   * to just the primary player at 0, preserving single-player behavior.
    */
-  readonly playerRelativePositions?: readonly number[];
+  readonly sessionPlayers?: readonly RivalSessionPlayer[];
 }
 
 interface LaneClearance {
@@ -106,13 +124,23 @@ const RIVAL_TRAIN_CLOSE_RATE_KPH = 6;
 // Faster rivals share that curve through normal speeds, then retain the small
 // amount of pull available here so their definition-owned caps remain real.
 const RIVAL_HIGH_SPEED_CURVE_CEILING_KPH = MAX_SPEED_KPH * 0.93;
+// The police interceptor rolls its per-session top speed inside this window,
+// so some nights it is prey and some nights it is the fastest thing out.
+export const POLICE_MIN_TOP_SPEED_KPH = 221;
+export const POLICE_MAX_TOP_SPEED_KPH = 321;
+// Pursuit tuning: run the target down with a real overspeed, and when it slips
+// past, brake-check into its path instead of politely following.
+const POLICE_RAM_OVERSPEED_KPH = 42;
+const POLICE_BRAKE_CHECK_UNDERSPEED_KPH = 18;
+const POLICE_CONTACT_HOLD_RANGE_METERS = 2.5;
 
 export const RIVAL_DEFINITION_IDS = [
   "shirokage",
   "red_shirokage_test",
   "hibana_rs",
   "aonami_gt",
-  "kagero_vx"
+  "kagero_vx",
+  "police_interceptor"
 ] as const;
 
 export type RivalDefinitionId = (typeof RIVAL_DEFINITION_IDS)[number];
@@ -177,16 +205,32 @@ export const RIVAL_DEFINITIONS: Readonly<Record<RivalDefinitionId, RivalDefiniti
     brakingKphPerSecond: 82,
     reactionDistanceMeters: 170,
     laneChangeCooldownSeconds: 0.72
+  },
+  police_interceptor: {
+    id: "police_interceptor",
+    displayName: "Prefectural Interceptor",
+    kind: "police",
+    // Base values; every session overrides top speed and acceleration with
+    // per-instance rolls inside [POLICE_MIN_TOP_SPEED_KPH, POLICE_MAX_TOP_SPEED_KPH].
+    maxSpeedKph: POLICE_MAX_TOP_SPEED_KPH,
+    inactiveSpeedRangeKph: [140, 195],
+    accelerationMultiplier: 1,
+    aggression: 100,
+    brakingKphPerSecond: 74,
+    reactionDistanceMeters: 150,
+    laneChangeCooldownSeconds: 0.55,
+    pursuit: true
   }
 };
 
 /** Absolute collision/draft ceiling for a rival, parallel to Reimei's hard cap. */
 export function rivalHardSpeedLimitKph(
-  rival: Pick<RivalState, "definitionId">
+  rival: Pick<RivalState, "definitionId" | "maxSpeedKphOverride">
 ): number {
   const definition =
     RIVAL_DEFINITIONS[rival.definitionId as RivalDefinitionId] ?? RIVAL_DEFINITIONS.shirokage;
-  return Math.min(MAX_SPEED_KPH, definition.maxSpeedKph + RIVAL_DRAFT_TOP_SPEED_BONUS_KPH);
+  const topSpeedKph = rival.maxSpeedKphOverride ?? definition.maxSpeedKph;
+  return Math.min(MAX_SPEED_KPH, topSpeedKph + RIVAL_DRAFT_TOP_SPEED_BONUS_KPH);
 }
 
 export function createInitialRivals(random: () => number = Math.random): RivalState[] {
@@ -203,7 +247,7 @@ export function createInitialRivals(random: () => number = Math.random): RivalSt
   ];
 
   const slotLength = ROUTE_LENGTH_METERS / initialRivals.length;
-  return initialRivals.map((initial, spawnSlot) => {
+  const rivals: RivalState[] = initialRivals.map((initial, spawnSlot) => {
     const definition = RIVAL_DEFINITIONS[initial.definitionId];
     const inactiveCruiseSpeedKph = inactiveSpeedForRatio(definition, random());
     // Stratified random positions keep all five identities distributed around
@@ -228,6 +272,37 @@ export function createInitialRivals(random: () => number = Math.random): RivalSt
       cycle
     };
   });
+
+  // The police interceptor is a sixth, non-ambient unit: it patrols anywhere
+  // on the loop and rolls per-session pursuit performance, so its threat level
+  // is different every night.
+  const police = RIVAL_DEFINITIONS.police_interceptor;
+  const policeCruiseSpeedKph = inactiveSpeedForRatio(police, random());
+  const policeRelativeMeters = wrapRouteRelativeMeters(
+    clamp(random(), 0, 0.999999) * ROUTE_LENGTH_METERS
+  );
+  const policeLane = ROAD_LANES[Math.floor(clamp(random(), 0, 0.999999) * ROAD_LANES.length)]!;
+  const maxSpeedKphOverride =
+    POLICE_MIN_TOP_SPEED_KPH +
+    clamp(random(), 0, 1) * (POLICE_MAX_TOP_SPEED_KPH - POLICE_MIN_TOP_SPEED_KPH);
+  const accelerationMultiplierOverride = 0.9 + clamp(random(), 0, 1) * 0.3;
+  rivals.push({
+    id: "rival-police-01",
+    definitionId: police.id,
+    kind: police.kind,
+    lane: policeLane,
+    laneFraction: laneRoadFraction(policeLane),
+    speedKph: policeCruiseSpeedKph,
+    inactiveCruiseSpeedKph: policeCruiseSpeedKph,
+    encounterActive: false,
+    relativeMeters: policeRelativeMeters,
+    laneChangeCooldown: police.laneChangeCooldownSeconds,
+    laneChange: null,
+    cycle,
+    maxSpeedKphOverride,
+    accelerationMultiplierOverride
+  });
+  return rivals;
 }
 
 /** Shortest signed distance on the closed 7.2 km expressway loop. */
@@ -257,7 +332,19 @@ export function rivalIsRearViewRenderable(relativeMeters: number): boolean {
 }
 
 function definitionFor(rival: RivalState): RivalDefinition {
-  return RIVAL_DEFINITIONS[rival.definitionId as RivalDefinitionId] ?? RIVAL_DEFINITIONS.shirokage;
+  const base =
+    RIVAL_DEFINITIONS[rival.definitionId as RivalDefinitionId] ?? RIVAL_DEFINITIONS.shirokage;
+  if (
+    rival.maxSpeedKphOverride === undefined &&
+    rival.accelerationMultiplierOverride === undefined
+  ) {
+    return base;
+  }
+  return {
+    ...base,
+    maxSpeedKph: rival.maxSpeedKphOverride ?? base.maxSpeedKph,
+    accelerationMultiplier: rival.accelerationMultiplierOverride ?? base.accelerationMultiplier
+  };
 }
 
 function aggressionRatio(definition: RivalDefinition): number {
@@ -456,11 +543,11 @@ function freeRunTargetSpeed(
 /** True when any session player is close enough to wake this rival. */
 function anyPlayerInEncounterRange(
   rivalRelativeMeters: number,
-  playerRelativePositions: readonly number[]
+  sessionPlayers: readonly RivalSessionPlayer[]
 ): boolean {
-  return playerRelativePositions.some((playerRelativeMeters) => {
+  return sessionPlayers.some((player) => {
     const relativeToPlayer = wrapRouteRelativeMeters(
-      rivalRelativeMeters - playerRelativeMeters
+      rivalRelativeMeters - player.relativeMeters
     );
     return (
       rivalIsRenderable(relativeToPlayer) ||
@@ -469,13 +556,34 @@ function anyPlayerInEncounterRange(
   });
 }
 
+/** The pursuit unit's quarry: whichever session player is physically closest. */
+function nearestSessionPlayer(
+  rivalRelativeMeters: number,
+  sessionPlayers: readonly RivalSessionPlayer[]
+): RivalSessionPlayer | null {
+  let nearest: RivalSessionPlayer | null = null;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+  for (const player of sessionPlayers) {
+    const distance = Math.abs(
+      wrapRouteRelativeMeters(player.relativeMeters - rivalRelativeMeters)
+    );
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearest = player;
+    }
+  }
+  return nearest;
+}
+
 export function stepRivals(
   rivals: readonly RivalState[],
   input: RivalStepInput
 ): RivalState[] {
   const safeDt = clamp(input.dt, 0, 0.05);
   const safePlayerSpeed = Math.max(0, input.playerSpeedKph);
-  const playerRelativePositions = input.playerRelativePositions ?? [0];
+  const sessionPlayers: readonly RivalSessionPlayer[] = input.sessionPlayers ?? [
+    { relativeMeters: 0, lane: input.playerLane, speedKph: safePlayerSpeed }
+  ];
 
   return rivals.map((rival) => {
     const definition = definitionFor(rival);
@@ -506,6 +614,14 @@ export function stepRivals(
         trainPartner: true
       }
     ];
+    const encountered = anyPlayerInEncounterRange(rival.relativeMeters, sessionPlayers);
+    // A pursuit unit that has ever seen a player hunts the nearest one from
+    // then on: it steers into the quarry's lane and aims for contact instead
+    // of respecting the ambient safe-merge rules.
+    const pursuitTarget =
+      definition.pursuit === true && (rival.encounterActive || encountered)
+        ? nearestSessionPlayer(rival.relativeMeters, sessionPlayers)
+        : null;
     let laneAfterChoice = rival.lane;
     let laneChange = rival.laneChange ?? null;
     let committedLaneChange = false;
@@ -516,7 +632,12 @@ export function stepRivals(
       laneChange = laneStep.intent;
       committedLaneChange = laneStep.committed;
     } else {
-      const nextLane = chooseLane(rival, definition, obstacles);
+      const nextLane =
+        pursuitTarget !== null
+          ? rival.laneChangeCooldown <= 0
+            ? laneStepToward(rival.lane, pursuitTarget.lane)
+            : rival.lane
+          : chooseLane(rival, definition, obstacles);
       laneChange = startLaneChangeIntent(rival.lane, nextLane);
       if (laneChange !== null) {
         const laneStep = stepLaneChange(rival.lane, laneChange, safeDt);
@@ -551,22 +672,36 @@ export function stepRivals(
     );
     const draftedCapKph =
       definition.maxSpeedKph + draft.boostRatio * RIVAL_DRAFT_TOP_SPEED_BONUS_KPH;
-    const encountered = anyPlayerInEncounterRange(
-      rival.relativeMeters,
-      playerRelativePositions
-    );
     const isEscapingBlocker = laneChange !== null;
     const isBlocked =
       !isEscapingBlocker &&
       clearance.aheadMeters < definition.reactionDistanceMeters &&
       clearance.blockerSpeedKph !== null;
     const isTraining = isBlocked && wantsTrainBehind(definition, clearance);
-    const desiredSpeed = isBlocked
-      ? isTraining
-        ? clearance.blockerSpeedKph! + RIVAL_TRAIN_CLOSE_RATE_KPH
-        : Math.max(0, clearance.blockerSpeedKph! - 4)
-      : freeRunTargetSpeed(rival, draftedCapKph, encountered);
+    // Pursuit speed policy: behind the quarry, run it down at a real
+    // overspeed; ahead of it, brake-check into its path; on contact, keep a
+    // gentle overspeed so the grind never stops.
+    const pursuitGapMeters =
+      pursuitTarget !== null
+        ? wrapRouteRelativeMeters(pursuitTarget.relativeMeters - rival.relativeMeters)
+        : 0;
+    const desiredSpeed =
+      pursuitTarget !== null
+        ? pursuitGapMeters > POLICE_CONTACT_HOLD_RANGE_METERS
+          ? pursuitTarget.speedKph + POLICE_RAM_OVERSPEED_KPH
+          : pursuitGapMeters < -POLICE_CONTACT_HOLD_RANGE_METERS
+            ? Math.max(40, pursuitTarget.speedKph - POLICE_BRAKE_CHECK_UNDERSPEED_KPH)
+            : pursuitTarget.speedKph + 10
+        : isBlocked
+          ? isTraining
+            ? clearance.blockerSpeedKph! + RIVAL_TRAIN_CLOSE_RATE_KPH
+            : Math.max(0, clearance.blockerSpeedKph! - 4)
+          : freeRunTargetSpeed(rival, draftedCapKph, encountered);
     const targetSpeed = Math.min(draftedCapKph, desiredSpeed);
+    const brakingHard =
+      pursuitTarget !== null
+        ? targetSpeed < rival.speedKph
+        : isBlocked && !isTraining;
     const speedKph = Math.min(
       rivalHardSpeedLimitKph(rival),
       speedToward(
@@ -575,7 +710,7 @@ export function stepRivals(
         definition,
         safeDt,
         draft.powerMultiplier * push.powerMultiplier,
-        isBlocked && !isTraining
+        brakingHard
       )
     );
     const relativeMeters = wrapRouteRelativeMeters(
@@ -599,7 +734,7 @@ export function stepRivals(
       encounterActive:
         rival.encounterActive ||
         encountered ||
-        anyPlayerInEncounterRange(relativeMeters, playerRelativePositions),
+        anyPlayerInEncounterRange(relativeMeters, sessionPlayers),
       relativeMeters,
       laneChangeCooldown:
         laneChange !== null

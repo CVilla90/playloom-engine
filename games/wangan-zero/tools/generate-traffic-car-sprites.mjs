@@ -153,6 +153,26 @@ const VARIANTS = {
     projectionScale: 178,
     codeName: "REIMEI XR"
   },
+  police: {
+    label: "Kurohama Prefectural Interceptor",
+    description: "Original police pursuit sedan: white body over a black lower band, blue door decals, and a red/blue roof light bar.",
+    frameDirectory: "police-car-frames",
+    frameSlug: "police-car-yaw",
+    sheetSlug: "police-car-angle-sheet",
+    modelSlug: "police-interceptor-low-poly",
+    objComment: "# Wangan Zero police interceptor pursuit sedan",
+    materialComment: "# Wangan Zero police interceptor materials",
+    bodyColor: "#e9ecef",
+    bodyDarkColor: "#0b0e12",
+    accentColor: "#101418",
+    wheelColor: "#aeb6bd",
+    wheelDarkColor: "#22272c",
+    tailColor: "#d62230",
+    headlightColor: "#eaf2f6",
+    classicLights: true,
+    police: true,
+    codeName: "POLICE INTERCEPTOR"
+  },
   truck: {
     label: "Kurohama container truck",
     description: "Simple solid traffic truck carrying a closed freight container.",
@@ -231,6 +251,14 @@ const MATERIALS = {
         container: { color: "#98452f", roughness: 0.86 },
         containerAccent: { color: "#56271f", roughness: 0.92 },
         indicator: { color: "#e6922d", roughness: 0.4, unlit: true }
+      }
+    : {}),
+  ...(CAR.police
+    ? {
+        accent: { color: CAR.accentColor, roughness: 0.86 },
+        decal: { color: "#2456b3", roughness: 0.6 },
+        sirenRed: { color: "#e33128", roughness: 0.3, unlit: true },
+        sirenBlue: { color: "#2f6fe8", roughness: 0.3, unlit: true }
       }
     : {}),
   reverse: { color: "#e5d4ad", roughness: 0.48, unlit: true },
@@ -600,6 +628,20 @@ function addSideDetails() {
       addSideBand("lower-black-accent", side, 0.47, 0.65, -1.98, 1.96, "accent");
     }
   }
+}
+
+function addPoliceDetails() {
+  // Japanese patrol two-tone: white body over a full-length black lower band,
+  // a blue prefecture decal on each front door, and a roof light bar with one
+  // red and one blue lamp. The band reuses the tapered sedan's proud side
+  // offsets; the decal blades hug the taper via per-end x.
+  for (const side of [-1, 1]) {
+    addSideBand("police-lower-band", side, 0.42, 0.72, -1.98, 1.96, "accent");
+    addBladePanel("police-door-decal", side, 0.78, 0.9, 0.2, 0.9, 0.884, 0.871, "decal");
+  }
+  addBox("siren-bar-base", [0, 1.6, -0.05], [0.9, 0.07, 0.3], "trim");
+  addBox("siren-lamp-red", [-0.23, 1.67, -0.05], [0.4, 0.1, 0.26], "sirenRed");
+  addBox("siren-lamp-blue", [0.23, 1.67, -0.05], [0.4, 0.1, 0.26], "sirenBlue");
 }
 
 function addWheel(name, side, z, options = {}) {
@@ -1436,6 +1478,9 @@ function buildModel() {
   addRearDetails();
   addFrontDetails();
   addSideDetails();
+  if (CAR.police) {
+    addPoliceDetails();
+  }
   for (const side of [-1, 1]) {
     addWheel(`rear-wheel-${side}`, side, -1.35);
     addWheel(`front-wheel-${side}`, side, 1.35);
@@ -1512,7 +1557,11 @@ function renderLayer(face, angleDegrees) {
       return 3;
     }
   }
-  if (face.material === "accent") {
+  if (face.material === "sirenRed" || face.material === "sirenBlue") {
+    // The light bar is the car's topmost geometry; nothing may overpaint it.
+    return 6;
+  }
+  if (face.material === "accent" || face.material === "decal") {
     return CAR.depthSortedAccent ? 0 : 1;
   }
   if (face.material === "containerAccent") {

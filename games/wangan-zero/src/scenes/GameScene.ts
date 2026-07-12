@@ -1989,6 +1989,9 @@ export class GameScene implements Scene {
         spriteView.mirrored,
         false
       );
+      if (entry.source === "rival" && entry.vehicle.kind === "police" && entry.vehicle.encounterActive) {
+        this.renderPoliceSirenGlow(drawWidth, drawHeight, drawY);
+      }
       ctx.restore();
       if (entry.source === "player") {
         this.renderPlayerNameplate(
@@ -2001,6 +2004,28 @@ export class GameScene implements Scene {
         );
       }
     }
+  }
+
+  // Alternating red/blue strobe over the interceptor's roof light bar. Called
+  // inside the sprite's translated (and possibly mirrored) context; the bar
+  // sits at a fixed fraction of the 1024x640 frame in both rear and front
+  // views, so one overlay serves the windshield and the mirror.
+  private renderPoliceSirenGlow(drawWidth: number, drawHeight: number, drawY: number): void {
+    const { ctx } = this.services.renderer;
+    const lampY = drawY + drawHeight * 0.314;
+    const lampOffsetX = drawWidth * 0.039;
+    const redLit = Math.floor(this.elapsed * 5) % 2 === 0;
+    const litX = redLit ? -lampOffsetX : lampOffsetX;
+    const color = redLit ? "rgba(255,64,48," : "rgba(72,128,255,";
+    const lampRadius = Math.max(2.5, drawWidth * 0.028);
+    ctx.save();
+    const glow = ctx.createRadialGradient(litX, lampY, 0, litX, lampY, lampRadius * 4);
+    glow.addColorStop(0, `${color}0.9)`);
+    glow.addColorStop(0.45, `${color}0.32)`);
+    glow.addColorStop(1, `${color}0)`);
+    ctx.fillStyle = glow;
+    ctx.fillRect(litX - lampRadius * 4, lampY - lampRadius * 4, lampRadius * 8, lampRadius * 8);
+    ctx.restore();
   }
 
   private remoteRaceVehicles(): Array<RacePlayerSnapshot & { readonly relativeMeters: number }> {
@@ -2379,6 +2404,9 @@ export class GameScene implements Scene {
         spriteView.mirrored,
         true
       );
+      if (entry.source === "rival" && entry.vehicle.kind === "police" && entry.vehicle.encounterActive) {
+        this.renderPoliceSirenGlow(drawWidth, drawHeight, drawY);
+      }
       ctx.restore();
       if (entry.source === "player") {
         this.renderPlayerNameplate(

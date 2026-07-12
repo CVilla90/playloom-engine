@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  POLICE_MAX_TOP_SPEED_KPH,
+  POLICE_MIN_TOP_SPEED_KPH,
   SHIROKAGE_MAX_SPEED_KPH,
   RIVAL_DEFINITIONS,
   RIVAL_DRAFT_TOP_SPEED_BONUS_KPH,
@@ -24,18 +26,19 @@ function obstacle(overrides: Partial<RivalObstacle> & Pick<RivalObstacle, "id">)
 
 describe("wangan zero rival model", () => {
   it("spawns one of each rival at session-randomized positions and cruise speeds", () => {
-    const sequence = [0, 0, 0, 0.25, 0.25, 0.25, 0.5, 0.5, 0.5, 0.75, 0.75, 0.75, 1, 0.99, 0.99];
+    const sequence = [0, 0, 0, 0.25, 0.25, 0.25, 0.5, 0.5, 0.5, 0.75, 0.75, 0.75, 1, 0.99, 0.99, 0.5, 0.5, 0.5, 0.5, 0.5];
     let cursor = 0;
     const rivals = createInitialRivals(() => sequence[cursor++] ?? 0.5);
     const [rival] = rivals;
 
-    expect(rivals).toHaveLength(5);
+    expect(rivals).toHaveLength(6);
     expect(rivals.map((entry) => entry.kind)).toEqual([
       "shirokage",
       "shirokageRed",
       "hibanaRs",
       "aonamiGt",
-      "kageroVx"
+      "kageroVx",
+      "police"
     ]);
     expect(rival).toMatchObject({
       kind: "shirokage",
@@ -43,8 +46,76 @@ describe("wangan zero rival model", () => {
     });
     expect(rival!.speedKph).toBeGreaterThanOrEqual(RIVAL_DEFINITIONS.shirokage!.inactiveSpeedRangeKph[0]);
     expect(rival!.speedKph).toBeLessThanOrEqual(RIVAL_DEFINITIONS.shirokage!.inactiveSpeedRangeKph[1]);
-    expect(new Set(rivals.map((entry) => entry.definitionId)).size).toBe(5);
+    expect(new Set(rivals.map((entry) => entry.definitionId)).size).toBe(6);
     expect(rivals.every((entry) => Math.abs(entry.relativeMeters) <= RIVAL_ROUTE_HALF_LENGTH_METERS)).toBe(true);
+  });
+
+  it("rolls the police interceptor's per-session pursuit performance inside its window", () => {
+    const slowest = createInitialRivals(() => 0).find((entry) => entry.kind === "police")!;
+    const fastest = createInitialRivals(() => 0.999999).find((entry) => entry.kind === "police")!;
+
+    expect(slowest.maxSpeedKphOverride).toBeCloseTo(POLICE_MIN_TOP_SPEED_KPH, 5);
+    expect(fastest.maxSpeedKphOverride!).toBeGreaterThan(POLICE_MAX_TOP_SPEED_KPH - 1);
+    expect(fastest.maxSpeedKphOverride!).toBeLessThanOrEqual(POLICE_MAX_TOP_SPEED_KPH);
+    expect(slowest.accelerationMultiplierOverride).toBeCloseTo(0.9, 5);
+    expect(fastest.accelerationMultiplierOverride!).toBeLessThanOrEqual(1.2);
+    expect(rivalHardSpeedLimitKph({ definitionId: "police_interceptor", maxSpeedKphOverride: 250 }))
+      .toBe(250 + RIVAL_DRAFT_TOP_SPEED_BONUS_KPH);
+  });
+
+  it("steers the woken police interceptor toward its quarry's lane", () => {
+    const police = createInitialRivals(() => 0.5).find((entry) => entry.kind === "police")!;
+    const [stepped] = stepRivals(
+      [{
+        ...police,
+        lane: "left",
+        laneFraction: -2 / 3,
+        relativeMeters: -50,
+        encounterActive: true,
+        laneChangeCooldown: 0,
+        laneChange: null
+      }],
+      { playerSpeedKph: 200, playerLane: "right", obstacles: [], dt: 0.05 }
+    );
+
+    expect(stepped!.laneChange?.targetLane).toBe("center");
+  });
+
+  it("runs the quarry down at ram overspeed and brake-checks once ahead of it", () => {
+    const police = createInitialRivals(() => 0.5).find((entry) => entry.kind === "police")!;
+    let chaser: typeof police = {
+      ...police,
+      lane: "center",
+      laneFraction: 0,
+      speedKph: 180,
+      relativeMeters: -60,
+      encounterActive: true,
+      laneChange: null,
+      maxSpeedKphOverride: 321,
+      accelerationMultiplierOverride: 1.1
+    };
+    for (let index = 0; index < 600; index += 1) {
+      [chaser] = stepRivals([{ ...chaser!, relativeMeters: -60 }], {
+        playerSpeedKph: 200,
+        playerLane: "center",
+        obstacles: [],
+        dt: 0.05
+      }) as [typeof police];
+    }
+    // Behind the player: it must exceed the player's speed, not match it.
+    expect(chaser!.speedKph).toBeGreaterThan(220);
+
+    let blocker: typeof police = { ...chaser!, speedKph: 260, relativeMeters: 40 };
+    for (let index = 0; index < 100; index += 1) {
+      [blocker] = stepRivals([{ ...blocker!, relativeMeters: 40 }], {
+        playerSpeedKph: 250,
+        playerLane: "center",
+        obstacles: [],
+        dt: 0.05
+      }) as [typeof police];
+    }
+    // Ahead of the player: it slows into the quarry's path instead of escaping.
+    expect(blocker!.speedKph).toBeLessThan(240);
   });
 
   it("owns the agreed speed, acceleration, aggression, and braking personalities", () => {

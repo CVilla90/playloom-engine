@@ -1,6 +1,6 @@
 # Wangan Zero Handoff
 
-_Last updated: July 12, 2026_
+_Last updated: July 12, 2026 (evening session)_
 
 ## Purpose
 This is the return point for anyone (human or AI) picking up **Wangan Zero**. It records
@@ -121,7 +121,7 @@ Use this section as the quick behavioral truth before changing code:
 1a. **Cosmetic burnout:** `burnoutModel.ts` observes clutch/RPM/gear/speed without feeding the drive model. It arms only below `40 km/h`, in first, with clutch held and RPM at least `5,000`; release starts a `1.5 s` smoke/squeal effect. `burnoutVisual.ts` is a reusable rear-wheel-coordinate painter used by the mirror and ready for a future remote-car render. No multiplayer transport/runtime exists yet.
 2. **Traffic count is intentionally tiny:** exactly one sedan and one container truck. Do not increase density unless the design explicitly asks for it.
 3. **Traffic speeds:** sedans cruise at `75.6–100.8 km/h` and hard-cap at `180`; trucks cruise at `58.8–78.4 km/h` and hard-cap at `120`. Donated speed bleeds back toward cruise over the following seconds. Spawn lanes are weighted by vehicle kind: trucks mostly left, sedans mostly center.
-4. **Rivals:** exactly one of each of five ambient rival identities exists. Session creation randomizes their loop positions, lanes, and definition-bounded cruise speeds. They move continuously off-screen, never recycle around the player, activate once visible, and range from white Shirokage's `221 km/h` normal cap through Kagero VX's `321 km/h`; slipstream headroom is mechanically capped at `+18 km/h`.
+4. **Rivals:** exactly one of each of five ambient rival identities exists, plus the police interceptor pursuit unit (six persistent rivals total). Session creation randomizes their loop positions, lanes, and definition-bounded cruise speeds. They move continuously off-screen, never recycle around the player, activate once ANY session player is in range, and the ambient five range from white Shirokage's `221 km/h` normal cap through Kagero VX's `321 km/h`; slipstream headroom is mechanically capped at `+18 km/h`. The police rolls a per-session top speed in `[221, 321]` and, once woken, permanently hunts the nearest player for contact.
 5. **Rival lane AI:** the rival scans all three lanes. If a safe escape lane exists, it starts a one-lane signal toward that route and keeps free-running speed while signaling. It brakes only when no viable lane move is available and it is boxed in.
 6. **Lane changes:** player, sedan traffic, and rivals use `LaneChangeIntent`. Blinkers pulse at `0.0 s` and `0.5 s`; collision/draft committed lane changes at `1.0 s`. Visual `laneFraction` can move before the committed lane changes.
 7. **Blinker visuals:** player blinkers are cockpit/dashboard triangles. Traffic/rival blinkers are mostly opaque amber horizontal triangles anchored near the lamp area and pointing toward the intended lane, rendered in windshield and rear-view mirror.
@@ -134,7 +134,7 @@ Use this section as the quick behavioral truth before changing code:
 ## Architecture / key files
 All paths are under `games/wangan-zero/`.
 
-1. `src/main.ts` — app bootstrap: creates canvas + `Renderer2D` + `InputManager`, wires `BootScene` ↔ `GameScene`, runs the engine `FixedLoop`. Also attaches `TouchDriveControls`.
+1. `src/main.ts` — app bootstrap: creates canvas + `Renderer2D` + `InputManager`, wires `BootScene` ↔ `GameScene`, runs the engine `FixedLoop`. The old DOM touch deck is gone; every control is in-canvas.
 2. `src/context.ts` — `AppServices` (`renderer`, `input`) passed to scenes.
 3. `src/types.ts` — `GAME_MANIFEST` (id/name/size/fps), `GAME_TITLE_JP` (`湾岸ゼロ`), `GAME_TAGLINE`.
 4. `src/drivingModel.ts` — **pure, testable** physics + looping route model: gear/speed/rpm bands, `driveAccelerationKphPerSecond`, `stepDriveModel`, `ROUTE_SECTORS`, `getRouteSector`, `clamp`, constants (`MAX_GEAR`, `ROUTE_LENGTH_METERS`, …). No rendering here. `DriveState.finished` is retained for compatibility but remains `false`; the route loops instead of ending.
@@ -151,7 +151,7 @@ All paths are under `games/wangan-zero/`.
 9. `src/audio/RoadCarAudio.ts` — in-game procedural engine (osc + harmonics), intake/wind/tire noise, rev-limiter breakup, and the burnout-only fluttering bandpass squeal bus. Entry point `setVolume(scale)`; `update(state)`; `unlock()`/`shutdown()`; `playImpact()` (one-shot collision thud).
 10. `src/audio/MidnightActionTitleMusic.ts` — title-screen action-rock loop. `setActive`, `setVolume`, `update`.
 11. `src/audio/MidnightTitleMusic.ts` — softer original theme, **currently unused**, reserved for a future garage/menu.
-12. `src/touch/TouchDriveControls.ts` — compact sequential-gear/start/restart/audio fallback deck for touch devices. The in-canvas cockpit owns the live clutch/brake/gas pedals, draggable H-pattern stick, and draggable wheel.
+12. (removed 2026-07-12) `src/touch/TouchDriveControls.ts` no longer exists. Its useful buttons became in-canvas cockpit buttons on the right pillar (`COCKPIT_TOUCH_BUTTONS` in `GameScene`: AUDIO, GEAR −, GEAR +). START/RESTART were dropped deliberately: the title has its own canvas Join button and `R` cannot reset an authoritative session.
 13. `src/scenes/BootScene.ts` — title screen: the bayside parking-area scene (bridge/skyline/water backdrop, parked Reimei XR hero sprite under a sodium lamp, vertical-JP + stacked-EN title lockup, entrance fade), action-rock theme, `M` audio cycle with an on-screen AUDIO label.
 14. `src/scenes/GameScene.ts` — **the big one.** Owns the backdrop/tunnel shell, segmented/curved visual road projection, projected traffic/rival rendering, rear-view mirror, cockpit GPS, open-cruise HUD, in-canvas `EXIT` button, and vignette.
 15. `game.manifest.json`, `assets/asset.manifest.json` — manifests; registered runtime traffic PNGs are sedan `0°`/`4°`/`8°` and truck `0°`/`4°`, with front-facing `0°`/`4°` pairs. Every rival body registers and uses rear/front `0°`/`4°` pairs.
@@ -183,7 +183,9 @@ All paths are under `games/wangan-zero/`.
 
 ## Cockpit UI reference (coordinates in `GameScene`)
 - Steering wheel is drawn around `(770, 700)`, rotated by `this.steeringAngle` (+ speed jitter); gauge centers are `(696, 592)` and `(844, 592)`.
-- The GPS/signal console is isolated at the far left and the H-shifter has a separate center pedestal. Pure six-gate geometry, neutral-corridor resolution, and pointer clamping live in `shifterModel.ts`; `GameScene` owns pointer capture and sends clutch-gated `selectGear` into `drivingModel.ts`. The eased knob position remains `this.shifter`.
+- The GPS/signal console hugs the left canvas border (frame `x 4–254`, GPS screen at `18, 568, 210×72`) in a bezel barely wider than the screen; only the two blinker triangles and a small status-light row remain around it. The enlarged H-shifter pedestal owns `SHIFTER_PLATE_BOUNDS = (276, 538, 324×178)` with columns `336/438/540` and top/neutral/bottom rows `580/634/690` — sized for mobile touch-drag. Pure six-gate geometry, neutral-corridor resolution, and pointer clamping live in `shifterModel.ts`; `GameScene` owns pointer capture (knob grab radius `SHIFTER_KNOB_GRAB_RADIUS = 46`) and sends clutch-gated `selectGear` into `drivingModel.ts`. The eased knob position remains `this.shifter`.
+- In-canvas cockpit buttons (`COCKPIT_TOUCH_BUTTONS`) sit on the right pillar at `x 1198`, rows `y 352/410/468`: AUDIO, GEAR −, GEAR +. They tap the same virtual keys as the keyboard (`m`/`q`/`e`), so clutch gating and the audio cycle behave identically to keys.
+- The canvas fills the whole viewport (16:9 contain via `.artery-app-shell` width `min(100%, (100dvh − 24px) · 16/9)`); there is no DOM control panel anymore.
 - Two gauges (RPM, KM/H) via `renderGauge`; no digital speed/gear boxes. The former clock screen is `renderRouteGps`, using normalized paths and `routeMapPositionAt`.
 
 ## How to run
@@ -203,7 +205,20 @@ All paths are under `games/wangan-zero/`.
    - Reimei gear redline speeds: 1≈58, 2≈104, 3≈158, 4≈220, 5≈278, 6≈342 km/h. The separate hard vehicle limit is `331`; torque and aerodynamic load balance near `321` without a bonus. Sector boundaries: 0 / 1200 / 2400 / 3600 / 4800 / 6000 m.
    - When driving via browser automation, a held key can be simulated by dispatching a `keydown` with no `keyup` (the engine reads `isDown`), e.g. `window.dispatchEvent(new KeyboardEvent('keydown',{key:'w',code:'KeyW'}))`; release with the matching `keyup`. **Caveat:** some harnesses blur the window and drop/clear synthetic key events (held throttle stalls, tap shifts get dropped); real OS key events (Playwright/computer `key`) are more reliable there. `R` restarts, `Esc` or the in-canvas `EXIT` button returns to title.
 
-## What changed in the latest Wangan session (2026-07-12, collision/draft-train revival)
+## What changed in the latest Wangan session (2026-07-12 evening: rival racing-mode fix, cockpit redesign, police interceptor)
+1. **Fixed: AI rivals never engaged racing mode online.** Two server bugs stacked:
+   - `AuthoritativeRaceSession` converted rivals/traffic into the anchor player's relative frame AND reconstructed world positions against the anchor's POST-step position, double-subtracting the anchor's own motion. Every NPC silently lost the anchor's speed in world coordinates, so a moving player blew past "racing" rivals as if they were parked (a rival reporting 160 km/h actually advanced at ~80 while the probe player drove). `tick()` now snapshots every player's pre-step distance; conversion uses the pre-step anchor frame, reconstruction the post-step position, restoring true NPC world speed.
+   - Racing-mode activation only ever checked the anchor player. `RivalStepInput.sessionPlayers` (relative position + lane + speed per player, default = the single local player) now lets ANY session player wake a rival, and `stepRivals` checks the encounter window against all of them.
+   - Regression tests: NPC world-speed integrity under a moving anchor, non-anchor activation, plus the two below.
+2. **Cockpit redesign for mobile-first touch (browser-verified).** GPS console slid to the left canvas border and shrank to a tight bezel (label removed, status lights halved); the H-gate shifter pedestal grew into the freed space (`324×178` plate, `102 px` column spacing, `110 px` vertical throw, knob grab radius 46); the DOM touch deck was deleted and AUDIO / GEAR − / GEAR + became in-canvas buttons on the right pillar (START/RESTART dropped: canvas Join button owns starting, `R` is a no-op online). The canvas now scales to the whole viewport. The join modal stops keystroke propagation so typing a name (W/A/S/D/Q/E) no longer queues shifts/lane changes.
+3. **NEW: Kurohama Prefectural Interceptor — the police pursuit unit (6th rival).**
+   - Sprite: new `police` variant in the shared generator (`tools/generate-police-car-sprites.mjs`) reusing the generic sedan geometry with a patrol two-tone (white over a full-length black lower band), blue front-door decals, black bumpers, and a roof light bar with one red and one blue lamp (`sirenRed`/`sirenBlue` materials render at the top layer so glass can never overpaint them). Frames/audit sheets/OBJ live in `assets/police-car-frames/` + `assets/models/police-interceptor-low-poly.*`; rear+front `0°/4°` registered and preloaded (`TrafficAssets.police`).
+   - AI: `police_interceptor` definition carries `pursuit: true`. Once ANY player wakes it (encounter latch), it hunts the nearest session player: steers lane-by-lane into the quarry's lane ignoring safe-merge rules, runs it down at `+42 km/h` overspeed from behind, brake-checks to `−18 km/h` into its path when ahead, and holds `+10` on contact so the grind never stops. Ambient rivals are untouched.
+   - Per-session performance roll: `createInitialRivals` gives it `maxSpeedKphOverride` uniform in `[221, 321]` and `accelerationMultiplierOverride` in `[0.9, 1.2]` (`RivalState` overrides flow through snapshots; `rivalHardSpeedLimitKph` respects the override). Some nights it is prey, some nights nothing outruns it.
+   - Rendering: `GameScene.renderPoliceSirenGlow` strobes an alternating red/blue radial glow over the light bar in both the windshield and mirror — but only while `encounterActive` (patrol lights stay dark until it wakes).
+   - Tests: police roll window, quarry-lane steering, ram-overspeed/brake-check speed policy, and a server-level integration test where the interceptor crosses lanes and shoves an idle player forward. Suite: `254` tests green + production build.
+
+## What changed in the Wangan session (2026-07-12, collision/draft-train revival)
 1. **Remote players restored to contact prediction.** `WanganSessionClient.getContactWorld()` now returns every remote player alongside rivals and traffic in the same latest-snapshot/dead-reckoned frame. `GameScene` feeds those Reimeis through the same local resolver, so player-to-player hits predict speed exchange, impact hold, flash, and audio immediately instead of appearing only when the server correction lands.
 2. **One hard ceiling contract for every road body.** `RoadCollisionVehicle.maxSpeedKph` and `RoadCollisionOptions.playerMaxSpeedKph` cap both participants inside the pure exchange. Reimei uses `348 km/h`; rivals use their definition cap plus at most `18 km/h` of mechanical draft headroom; sedans use `180`; trucks use `120`. `stepTraffic` and `stepRivals` enforce those limits again during behavioral recovery, so no donated speed survives above a car's top speed.
 3. **Mass and recovery remain gameplay-specific.** The existing `50%` front gain / `65%` rear loss stays deliberately dissipative for hard hits. Freight remains `2.6×` mass and gains little speed. Civilian traffic retains the gentle `9 km/h/s` return toward its programmed cruise speed; rival overspeed returns at `5.5 km/h/s` within its hard cap.
@@ -364,6 +379,6 @@ Cheap polish wins that need no new systems:
 5. Don't reintroduce road-overlay decoration. Backdrops stay behind the road.
 6. Keep content original/fictional. Sector labels are ASCII (`Ryujin`, `Chuo`) so they render in the canvas font.
 7. Resume from the pure model tests first when changing vehicle behavior: `draftModel.test.ts`, `laneChangeModel.test.ts`, `trafficModel.test.ts`, `rivalModel.test.ts`, and `collision.test.ts`.
-8. Do not increase traffic density or add more rivals unless the user asks; current tuning assumes one sedan, one truck at `56.25%` of the original encounter cadence, and exactly one persistent instance of each of five rivals.
+8. Do not increase traffic density or add more rivals unless the user asks; current tuning assumes one sedan, one truck at `56.25%` of the original encounter cadence, exactly one persistent instance of each of five ambient rivals, and one police interceptor.
 9. Preserve committed-lane semantics: draft/collision use committed lanes until a `LaneChangeIntent` finishes after `1.0 s`; only rendering should use in-progress `laneFraction`.
 10. Keep `docs/README.md`, this handoff, and relevant tests updated whenever gameplay mechanics change.

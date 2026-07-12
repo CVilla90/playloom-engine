@@ -136,11 +136,14 @@ describe("AuthoritativeRaceSession", () => {
   });
 
   it("restores a small authoritative draft from slow civilian traffic", () => {
+    // Session construction consumes 20 seeded draws (5 ambient rivals x 3 +
+    // the police interceptor's 5); spawn candidates start at draw 21, so the
+    // second candidate (84 m, center lane) is draw 22.
     let randomCalls = 0;
     const session = new AuthoritativeRaceSession(() => {
       randomCalls += 1;
-      if (randomCalls <= 15) return 0;
-      return randomCalls === 17 ? 0 : 0.9;
+      if (randomCalls <= 20) return 0;
+      return randomCalls === 22 ? 0 : 0.9;
     });
     session.joinPlayer("one", blueGold, 0);
     const snapshot = session.getSnapshot(0);
@@ -330,6 +333,43 @@ describe("AuthoritativeRaceSession", () => {
     const woken = snapshot.rivals.find((candidate) => candidate.id === rival.id)!;
     expect(woken.encounterActive).toBe(true);
     expect(woken.speedKph).toBeGreaterThan(cruiseSpeedKph + 5);
+  });
+
+  it("police interceptor crosses lanes and rams a session player", () => {
+    const session = new AuthoritativeRaceSession(() => 0.5);
+    session.joinPlayer("one", blueGold, 0);
+    const state = internals(session);
+    const target = state.players.get("one")!;
+    target.lane = "center";
+    target.laneFraction = laneRoadFraction("center");
+    target.drive = { ...target.drive, distanceMeters: 3000, visualDistanceMeters: 3000 };
+    const police = state.rivals.find((rival) => rival.kind === "police")!;
+    state.traffic = [];
+    state.rivals = [{
+      ...police,
+      lane: "right",
+      laneFraction: laneRoadFraction("right"),
+      distanceMeters: 2900,
+      speedKph: 180,
+      encounterActive: true,
+      laneChange: null,
+      laneChangeCooldown: 0,
+      maxSpeedKphOverride: 321,
+      accelerationMultiplierOverride: 1.1
+    }];
+
+    session.tick(0);
+    for (let now = 16; now <= 8000; now += 16) {
+      session.tick(now);
+    }
+
+    const snapshot = session.getSnapshot(8000);
+    const interceptor = snapshot.rivals[0]!;
+    const rammed = snapshot.players[0]!;
+    // It hunted across lanes into the player's path...
+    expect(interceptor.lane).toBe("center");
+    // ...and the contact exchange shoved the idle player forward.
+    expect(rammed.maxSpeedKph).toBeGreaterThan(15);
   });
 
   it("sustains a server-authoritative two-player draft train above solo speed", () => {

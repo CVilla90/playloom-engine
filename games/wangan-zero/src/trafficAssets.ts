@@ -27,6 +27,10 @@ import kageroVxYaw000Url from "../assets/kagero-vx-car-frames/kagero-vx-yaw-000.
 import kageroVxYaw004Url from "../assets/kagero-vx-car-frames/kagero-vx-yaw-004.png?url";
 import kageroVxFrontYaw000Url from "../assets/kagero-vx-car-frames/kagero-vx-front-yaw-000.png?url";
 import kageroVxFrontYaw004Url from "../assets/kagero-vx-car-frames/kagero-vx-front-yaw-004.png?url";
+import policeYaw000Url from "../assets/police-car-frames/police-car-yaw-000.png?url";
+import policeYaw004Url from "../assets/police-car-frames/police-car-yaw-004.png?url";
+import policeFrontYaw000Url from "../assets/police-car-frames/police-car-front-yaw-000.png?url";
+import policeFrontYaw004Url from "../assets/police-car-frames/police-car-front-yaw-004.png?url";
 import reimeiXrYaw000Url from "../assets/reimei-xr-car-frames/reimei-xr-yaw-000.png?url";
 import reimeiXrYaw004Url from "../assets/reimei-xr-car-frames/reimei-xr-yaw-004.png?url";
 import reimeiXrFrontYaw000Url from "../assets/reimei-xr-car-frames/reimei-xr-front-yaw-000.png?url";
@@ -55,6 +59,8 @@ export interface TrafficAssets {
   readonly hibanaRs: TrafficVehicleFrames;
   readonly aonamiGt: TrafficVehicleFrames;
   readonly kageroVx: TrafficVehicleFrames;
+  /** Pursuit unit: the Kurohama Prefectural Interceptor. */
+  readonly police: TrafficVehicleFrames;
   /** Player car views, preloaded for future replays, multiplayer, and garage UI. */
   readonly reimeiXr: TrafficVehicleFrames;
 }
@@ -110,6 +116,12 @@ export function createTrafficAssets(): TrafficAssets {
       quarter: imageFromUrl(kageroVxYaw004Url),
       frontStraight: imageFromUrl(kageroVxFrontYaw000Url),
       frontQuarter: imageFromUrl(kageroVxFrontYaw004Url)
+    },
+    police: {
+      straight: imageFromUrl(policeYaw000Url),
+      quarter: imageFromUrl(policeYaw004Url),
+      frontStraight: imageFromUrl(policeFrontYaw000Url),
+      frontQuarter: imageFromUrl(policeFrontYaw004Url)
     },
     reimeiXr: {
       straight: imageFromUrl(reimeiXrYaw000Url),

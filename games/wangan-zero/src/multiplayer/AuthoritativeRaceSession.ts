@@ -329,12 +329,14 @@ export class AuthoritativeRaceSession {
     // relativeMeters by (rivalSpeed - anchorSpeed) * dt, so the anchor's own
     // travel this tick must be added back exactly once.
     const anchorFrameMeters = preStepDistances.get(anchor.id) ?? anchor.drive.distanceMeters;
-    const playerRelativePositions = players.map((player) =>
-      routeRelativeMeters(
+    const sessionPlayers = players.map((player) => ({
+      relativeMeters: routeRelativeMeters(
         anchorFrameMeters,
         preStepDistances.get(player.id) ?? player.drive.distanceMeters
-      )
-    );
+      ),
+      lane: player.lane,
+      speedKph: player.drive.speedKph
+    }));
     const relativeRivals: RivalState[] = this.rivals.map(({ distanceMeters, ...rival }) => ({
       ...rival,
       relativeMeters: routeRelativeMeters(anchorFrameMeters, distanceMeters)
@@ -362,7 +364,7 @@ export class AuthoritativeRaceSession {
       playerSpeedKph: anchor.drive.speedKph,
       playerLane: anchor.lane,
       obstacles,
-      playerRelativePositions,
+      sessionPlayers,
       dt
     });
     this.rivals = stepped.map(({ relativeMeters, ...rival }) => ({
