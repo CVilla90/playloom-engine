@@ -2,11 +2,12 @@
   width: 100%;
 }
 
+/* The cockpit now owns every control, so the canvas is the whole app:
+   scale to fit the viewport in both axes (16:9) with no external panels. */
 .artery-app-shell {
   position: relative;
   display: grid;
-  width: min(100%, 1280px);
-  gap: 12px;
+  width: min(100%, calc((100dvh - 24px) * (16 / 9)));
   margin: 0 auto;
 }
 
@@ -239,50 +240,6 @@
   touch-action: none;
 }
 
-.artery-touch-panel {
-  display: none;
-  grid-template-columns: repeat(2, minmax(76px, 1fr)) repeat(3, minmax(68px, 0.72fr));
-  gap: 9px;
-  padding: 10px;
-  border: 1px solid rgba(128, 159, 193, 0.24);
-  border-radius: 10px;
-  background: rgba(6, 9, 15, 0.95);
-}
-
-.artery-touch-button {
-  min-height: 56px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #d7e0e9;
-  font: 800 13px "Trebuchet MS", sans-serif;
-  letter-spacing: 0.06em;
-  touch-action: none;
-}
-
-.artery-touch-button[data-tone="amber"] {
-  border-color: rgba(238, 171, 93, 0.42);
-  background: rgba(238, 171, 93, 0.13);
-  color: #f2cc91;
-}
-
-.artery-touch-button[data-tone="cyan"] {
-  border-color: rgba(103, 190, 222, 0.4);
-  background: rgba(103, 190, 222, 0.11);
-  color: #a9dced;
-}
-
-.artery-touch-button.is-active {
-  transform: translateY(2px);
-  filter: brightness(1.32);
-}
-
-@media (pointer: coarse), (max-width: 820px) {
-  .artery-touch-panel {
-    display: grid;
-  }
-}
-
 @media (max-width: 620px) {
   .wangan-color-fieldset {
     grid-template-columns: repeat(6, minmax(34px, 1fr));
@@ -291,14 +248,5 @@
   .wangan-color-choice {
     width: 36px;
     height: 36px;
-  }
-
-  .artery-touch-panel {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .artery-touch-button:nth-child(1),
-  .artery-touch-button:nth-child(2) {
-    grid-column: span 2;
   }
 }

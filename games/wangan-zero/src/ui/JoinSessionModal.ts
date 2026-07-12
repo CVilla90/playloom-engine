@@ -138,6 +138,10 @@ export class JoinSessionModal {
         this.close();
       }
     });
+    // Typing a player name must never leak W/A/S/D/Q/E into the game's
+    // window-level input listeners (it used to queue lane changes/shifts).
+    this.overlay.addEventListener("keydown", (event) => event.stopPropagation());
+    this.overlay.addEventListener("keyup", (event) => event.stopPropagation());
     this.unsubscribe = session.subscribe(() => this.refresh());
     this.refresh();
   }

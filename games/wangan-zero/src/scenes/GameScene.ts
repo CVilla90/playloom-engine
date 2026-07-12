@@ -217,13 +217,16 @@ const STEERING_DRAG_THRESHOLD = 48;
 // index into this list is its current lane; A/D step through it.
 const LANE_ORDER: readonly TrafficLane[] = ["left", "center", "right"];
 
+// The H-gate grew into the space freed by the slimmed left console: wider
+// column spacing and a taller top/bottom throw make mobile touch-drag gear
+// selection far more forgiving.
 const H_SHIFTER_LAYOUT: HShifterLayout = {
-  columns: [480, 525, 570],
-  topY: 615,
-  neutralY: 648,
-  bottomY: 682,
-  neutralBandHalfHeight: 10,
-  hitPadding: 24
+  columns: [336, 438, 540],
+  topY: 580,
+  neutralY: 634,
+  bottomY: 690,
+  neutralBandHalfHeight: 12,
+  hitPadding: 30
 };
 
 interface RectBounds {
@@ -234,11 +237,29 @@ interface RectBounds {
 }
 
 const SHIFTER_PLATE_BOUNDS: RectBounds = {
-  x: 452,
-  y: 574,
-  width: 144,
-  height: 140
+  x: 276,
+  y: 538,
+  width: 324,
+  height: 178
 };
+
+const SHIFTER_PLATE_CENTER_X = SHIFTER_PLATE_BOUNDS.x + SHIFTER_PLATE_BOUNDS.width * 0.5;
+// Touch radius for grabbing the stick knob.
+const SHIFTER_KNOB_GRAB_RADIUS = 46;
+
+// The old DOM touch deck is gone; its still-useful buttons live directly on
+// the right cockpit pillar so the canvas can own the whole screen. START and
+// RESTART were dropped deliberately: the title screen has its own canvas Join
+// button, and R cannot reset an authoritative online session.
+const COCKPIT_TOUCH_BUTTONS: ReadonlyArray<{
+  readonly label: string;
+  readonly key: "q" | "e" | "m";
+  readonly bounds: RectBounds;
+}> = [
+  { label: "AUDIO", key: "m", bounds: { x: 1198, y: 352, width: 70, height: 48 } },
+  { label: "GEAR −", key: "q", bounds: { x: 1198, y: 410, width: 70, height: 48 } },
+  { label: "GEAR +", key: "e", bounds: { x: 1198, y: 468, width: 70, height: 48 } }
+];
 
 const PEDAL_CONTROLS: ReadonlyArray<{
   readonly label: "CLUTCH" | "BRAKE" | "GAS";
@@ -422,6 +443,8 @@ export class GameScene implements Scene {
   private shifterDragPoint: ShifterPoint | null = null;
   private shifterCandidateGear: number | null = null;
   private pendingSelectedGear: number | null = null;
+  // Brief pressed-state feedback for the in-canvas cockpit buttons.
+  private readonly cockpitButtonFlash = new Map<string, number>();
 
   private readonly unlockAudio = (): void => {
     this.audio.unlock();
@@ -456,12 +479,23 @@ export class GameScene implements Scene {
       return;
     }
 
+    const cockpitButton = COCKPIT_TOUCH_BUTTONS.find(({ bounds }) =>
+      this.pointInBounds(x, y, bounds)
+    );
+    if (cockpitButton) {
+      event.preventDefault();
+      this.services.input.tapVirtualKey(cockpitButton.key);
+      this.cockpitButtonFlash.set(cockpitButton.key, 0.26);
+      this.showStartHint = false;
+      return;
+    }
+
     const knobDx = x - this.shifter.x;
     const knobDy = y - this.shifter.y;
     if (
       this.shifterPointerId === null &&
       this.pointInBounds(x, y, SHIFTER_PLATE_BOUNDS) &&
-      knobDx * knobDx + knobDy * knobDy <= 38 * 38
+      knobDx * knobDx + knobDy * knobDy <= SHIFTER_KNOB_GRAB_RADIUS * SHIFTER_KNOB_GRAB_RADIUS
     ) {
       event.preventDefault();
       if (!this.services.input.isDown("c")) {
@@ -607,6 +641,13 @@ export class GameScene implements Scene {
     this.clutchWarning = Math.max(0, this.clutchWarning - dt);
     this.shiftKick = Math.max(0, this.shiftKick - dt * 4.4);
     this.sectorFlash = Math.max(0, this.sectorFlash - dt);
+    for (const [key, remaining] of this.cockpitButtonFlash) {
+      if (remaining - dt <= 0) {
+        this.cockpitButtonFlash.delete(key);
+      } else {
+        this.cockpitButtonFlash.set(key, remaining - dt);
+      }
+    }
 
     if (this.actions.wasPressed("back")) {
       this.returnToTitle();
@@ -2124,10 +2165,44 @@ export class GameScene implements Scene {
     );
 
     this.renderPedalBank();
+    this.renderCockpitButtons();
     this.renderSteeringWheel();
 
     this.renderCenterConsole();
     this.renderRearViewMirror();
+  }
+
+  // The former DOM touch deck, now living on the right cockpit pillar. Taps
+  // route through the same virtual keys as the keyboard, so clutch gating and
+  // the audio cycle behave identically.
+  private renderCockpitButtons(): void {
+    const { renderer } = this.services;
+    const { ctx } = renderer;
+    for (const button of COCKPIT_TOUCH_BUTTONS) {
+      const { x, y, width, height } = button.bounds;
+      const pressed = (this.cockpitButtonFlash.get(button.key) ?? 0) > 0;
+      const accent =
+        button.key === "m"
+          ? this.audioMode === "muted"
+            ? "#a66e75"
+            : this.audioMode === "boosted"
+              ? "#d8b46a"
+              : "#709c90"
+          : button.key === "e"
+            ? "#efad58"
+            : "#aeb4bb";
+      this.roundedRectPath(x, y, width, height, 9);
+      ctx.fillStyle = pressed ? "rgba(52,56,61,0.95)" : "rgba(16,19,25,0.92)";
+      ctx.fill();
+      ctx.strokeStyle = pressed ? accent : "rgba(126,134,144,0.48)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      renderer.text(button.label, x + width * 0.5, y + height * 0.5 + 4, {
+        align: "center",
+        color: pressed ? "#f5f8fb" : accent,
+        font: "bold 11px Consolas"
+      });
+    }
   }
 
   private renderRearViewMirror(): void {
@@ -2532,13 +2607,14 @@ export class GameScene implements Scene {
     const { renderer } = this.services;
     const { ctx } = renderer;
 
-    // Navigation/signal stack is pushed hard left. Its right edge ends before
-    // the dedicated shifter pedestal, leaving the wheel silhouette untouched.
+    // Navigation/signal stack hugs the left canvas border in a bezel barely
+    // wider than the GPS itself; the space it gave up belongs to the enlarged
+    // shifter pedestal. Only the blinkers and a slim status-light row remain.
     ctx.beginPath();
-    ctx.moveTo(104, 548);
-    ctx.lineTo(407, 555);
-    ctx.lineTo(438, 720);
-    ctx.lineTo(78, 720);
+    ctx.moveTo(10, 552);
+    ctx.lineTo(240, 558);
+    ctx.lineTo(254, 720);
+    ctx.lineTo(4, 720);
     ctx.closePath();
     ctx.fillStyle = "#0b0d11";
     ctx.fill();
@@ -2546,18 +2622,13 @@ export class GameScene implements Scene {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    this.renderRouteGps(126, 565, 210, 72);
+    this.renderRouteGps(18, 568, 210, 72);
     for (let index = 0; index < 4; index += 1) {
-      renderer.circle(164 + index * 38, 658, 10, index === 0 ? "#8f432f" : "#20242a");
-      renderer.circle(164 + index * 38, 658, 4, index === 0 ? "#ef845a" : "#6d747d");
+      renderer.circle(93 + index * 20, 656, 5, index === 0 ? "#8f432f" : "#20242a");
+      renderer.circle(93 + index * 20, 656, 2, index === 0 ? "#ef845a" : "#6d747d");
     }
-    this.renderDashboardBlinker("left", 108, 658);
-    this.renderDashboardBlinker("right", 390, 658);
-    renderer.text("NAV / SIGNAL CONTROL", 258, 690, {
-      align: "center",
-      color: "rgba(127,142,157,0.62)",
-      font: "bold 9px Consolas"
-    });
+    this.renderDashboardBlinker("left", 40, 656);
+    this.renderDashboardBlinker("right", 206, 656);
 
     // Large isolated six-speed plate. The engraved numbers remain readable
     // around the knob and the neutral crossbar is deliberately unmistakable.
@@ -2576,7 +2647,7 @@ export class GameScene implements Scene {
     ctx.strokeStyle = "rgba(131,139,149,0.58)";
     ctx.lineWidth = 2.5;
     ctx.stroke();
-    renderer.text("6MT  //  CLUTCH", 524, 588, {
+    renderer.text("6MT  //  CLUTCH", SHIFTER_PLATE_CENTER_X, SHIFTER_PLATE_BOUNDS.y + 18, {
       align: "center",
       color: this.services.input.isDown("c") ? "#f0b968" : "#89929c",
       font: "bold 10px Consolas"
@@ -2614,15 +2685,15 @@ export class GameScene implements Scene {
     }
 
     ctx.beginPath();
-    ctx.ellipse(524, 714, 54, 21, 0, 0, Math.PI * 2);
+    ctx.ellipse(SHIFTER_PLATE_CENTER_X, 712, 62, 22, 0, 0, Math.PI * 2);
     ctx.fillStyle = "#111318";
     ctx.fill();
     ctx.strokeStyle = "#454951";
     ctx.lineWidth = 3;
     ctx.stroke();
-    renderer.line(524, 706, this.shifter.x, this.shifter.y + 5, "#747a82", 11);
+    renderer.line(SHIFTER_PLATE_CENTER_X, 704, this.shifter.x, this.shifter.y + 5, "#747a82", 12);
     ctx.beginPath();
-    ctx.ellipse(this.shifter.x, this.shifter.y, 24, 18, -0.18, 0, Math.PI * 2);
+    ctx.ellipse(this.shifter.x, this.shifter.y, 30, 23, -0.18, 0, Math.PI * 2);
     ctx.fillStyle = this.shifterPointerId !== null ? "#30271e" : "#1b1d21";
     ctx.fill();
     ctx.strokeStyle = this.shifterPointerId !== null ? "#efad58" : "#737880";
@@ -2637,7 +2708,7 @@ export class GameScene implements Scene {
       {
       align: "center",
       color: "#e1e5e9",
-      font: "bold 14px Consolas"
+      font: "bold 16px Consolas"
       }
     );
 
@@ -2648,13 +2719,18 @@ export class GameScene implements Scene {
     for (let gear = 1; gear <= MAX_GEAR; gear += 1) {
       if (gear === knobGear) continue;
       const gate = shifterGatePoint(gear, H_SHIFTER_LAYOUT);
-      renderer.text(gear.toString(), gate.x, gear % 2 === 1 ? 605 : 700, {
-        align: "center",
-        color: this.shifterCandidateGear === gear ? "#ffc373" : "#e0e4e8",
-        font: "bold 15px Consolas"
-      });
+      renderer.text(
+        gear.toString(),
+        gate.x,
+        gear % 2 === 1 ? H_SHIFTER_LAYOUT.topY - 12 : H_SHIFTER_LAYOUT.bottomY + 20,
+        {
+          align: "center",
+          color: this.shifterCandidateGear === gear ? "#ffc373" : "#e0e4e8",
+          font: "bold 16px Consolas"
+        }
+      );
     }
-    renderer.text("N", 524, H_SHIFTER_LAYOUT.neutralY + 4, {
+    renderer.text("N", SHIFTER_PLATE_CENTER_X, H_SHIFTER_LAYOUT.neutralY + 4, {
       align: "center",
       color: "rgba(222,227,232,0.72)",
       font: "bold 10px Consolas"

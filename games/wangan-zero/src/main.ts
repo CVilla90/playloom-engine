@@ -5,7 +5,6 @@ import { Renderer2D } from "@playloom/engine-renderer-canvas";
 import type { AppServices } from "./context";
 import { BootScene } from "./scenes/BootScene";
 import { GameScene } from "./scenes/GameScene";
-import { TouchDriveControls } from "./touch/TouchDriveControls";
 import { GAME_MANIFEST } from "./types";
 import { WanganSessionClient } from "./multiplayer/WanganSessionClient";
 import type { PlayerProfile } from "./multiplayer/playerProfile";
@@ -16,7 +15,6 @@ class GameApp {
   private readonly input = new InputManager(window);
   private readonly sceneManager = new SceneManager();
   private readonly services: AppServices;
-  private readonly touchControls: TouchDriveControls;
   private readonly session = new WanganSessionClient();
   private readonly joinModal: JoinSessionModal;
   private selectedProfile: PlayerProfile | null = null;
@@ -50,9 +48,6 @@ class GameApp {
       renderer: this.renderer,
       input: this.input
     };
-    this.touchControls = new TouchDriveControls(this.input, shell);
-    this.touchControls.attach();
-
     const showTitle = (): void => {
       this.session.leave();
       this.sceneManager.setScene(new BootScene(
