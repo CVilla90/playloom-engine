@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="650" viewBox="0 0 1000 650" fill="none">
+  <title>Generic civilian traffic car — direct rear view</title>
+  <desc>
+    Original fictional late-1980s compact sedan drawn from a clean, perfectly centered rear view.
+  </desc>
+
+  <defs>
+    <linearGradient id="bodyTop" x1="500" y1="116" x2="500" y2="340" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#48678F"/>
+      <stop offset="0.4" stop-color="#2C456B"/>
+      <stop offset="1" stop-color="#172C49"/>
+    </linearGradient>
+    <linearGradient id="bodyRear" x1="500" y1="270" x2="500" y2="530" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#34527B"/>
+      <stop offset="0.48" stop-color="#223C61"/>
+      <stop offset="1" stop-color="#10243E"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="500" y1="145" x2="500" y2="275" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#121D2D"/>
+      <stop offset="0.62" stop-color="#07111E"/>
+      <stop offset="1" stop-color="#03070D"/>
+    </linearGradient>
+    <linearGradient id="lamp" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FF5D58"/>
+      <stop offset="0.36" stop-color="#D9272D"/>
+      <stop offset="1" stop-color="#7E0E1D"/>
+    </linearGradient>
+    <linearGradient id="bumper" x1="500" y1="414" x2="500" y2="532" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#284364"/>
+      <stop offset="0.23" stop-color="#152B46"/>
+      <stop offset="1" stop-color="#071321"/>
+    </linearGradient>
+    <radialGradient id="lampGlow">
+      <stop stop-color="#FF4C47" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#FF4C47" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Identical rear-wheel silhouettes; no side-facing wheel is exposed. -->
+  <path d="M185 454C171 466 166 493 170 528C174 561 188 579 212 580C236 581 250 560 253 525C256 491 248 466 233 454H185Z" fill="#05070A"/>
+  <path d="M199 466C189 480 187 510 192 540C195 558 202 567 212 567C223 567 231 555 234 533C237 503 232 479 223 466H199Z" fill="#151A22"/>
+  <path d="M815 454C829 466 834 493 830 528C826 561 812 579 788 580C764 581 750 560 747 525C744 491 752 466 767 454H815Z" fill="#05070A"/>
+  <path d="M801 466C811 480 813 510 808 540C805 558 798 567 788 567C777 567 769 555 766 533C763 503 768 479 777 466H801Z" fill="#151A22"/>
+
+  <!-- Cabin and roof are mirrored around x=500. -->
+  <path d="M255 132C322 109 678 109 745 132C776 143 800 192 817 274H183C200 192 224 143 255 132Z" fill="url(#bodyTop)" stroke="#0A1422" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M280 152C341 136 659 136 720 152C746 161 766 200 780 260H220C234 200 254 161 280 152Z" fill="url(#glass)" stroke="#7891B3" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M239 245H761" stroke="#243D61" stroke-width="4"/>
+  <path d="M291 161C350 148 650 148 709 161" stroke="#6D8BB7" stroke-opacity="0.34" stroke-width="4" stroke-linecap="round"/>
+  <g stroke="#6F2D2E" stroke-opacity="0.32" stroke-width="2">
+    <path d="M239 238H761"/>
+    <path d="M242 224H758"/>
+    <path d="M246 210H754"/>
+  </g>
+
+  <!-- One uninterrupted, perfectly frontal rear body. -->
+  <path d="M170 270C189 257 214 250 245 250H755C786 250 811 257 830 270C848 291 855 320 855 359L850 455C847 485 824 507 795 512C650 530 350 530 205 512C176 507 153 485 150 455L145 359C145 320 152 291 170 270Z" fill="url(#bodyRear)" stroke="#091522" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M181 280C297 265 703 265 819 280L839 326H161L181 280Z" fill="#2B486F"/>
+  <path d="M182 282C310 271 690 271 818 282" stroke="#6D8CB5" stroke-opacity="0.55" stroke-width="4" stroke-linecap="round"/>
+  <path d="M177 304C315 292 685 292 823 304" stroke="#54739A" stroke-opacity="0.42" stroke-width="3"/>
+
+  <!-- Symmetric lamp glows and lamp assemblies. -->
+  <ellipse cx="240" cy="366" rx="116" ry="77" fill="url(#lampGlow)"/>
+  <ellipse cx="760" cy="366" rx="116" ry="77" fill="url(#lampGlow)"/>
+  <path d="M160 326H325V405H151L150 345C150 336 153 330 160 326Z" fill="url(#lamp)" stroke="#070B11" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M675 326H840C847 330 850 336 850 345L849 405H675V326Z" fill="url(#lamp)" stroke="#070B11" stroke-width="7" stroke-linejoin="round"/>
+  <g stroke="#FF7870" stroke-opacity="0.58" stroke-width="3">
+    <path d="M174 340H304"/>
+    <path d="M174 356H304"/>
+    <path d="M174 372H304"/>
+    <path d="M696 340H826"/>
+    <path d="M696 356H826"/>
+    <path d="M696 372H826"/>
+  </g>
+  <path d="M257 329V402M743 329V402" stroke="#5B0A14" stroke-width="5"/>
+  <path d="M278 379H319V402H278V379ZM681 379H722V402H681V379Z" fill="#E9D6B1" fill-opacity="0.82"/>
+
+  <!-- Center trim and blank registration recess. -->
+  <path d="M325 326H675V406H325V326Z" fill="#0A1019"/>
+  <path d="M337 342H663M337 357H663M337 372H663M337 387H663" stroke="#1E2A3A" stroke-width="5"/>
+  <rect x="437" y="356" width="126" height="44" rx="5" fill="#111923" stroke="#3B4C60" stroke-width="3"/>
+  <rect x="450" y="367" width="100" height="22" rx="3" fill="#080D14"/>
+
+  <!-- Continuous centered bumper and lower valance. -->
+  <path d="M150 410C305 423 695 423 850 410V468C810 490 190 490 150 468V410Z" fill="url(#bumper)" stroke="#07111D" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M163 429C312 441 688 441 837 429" stroke="#7690AE" stroke-opacity="0.48" stroke-width="5" stroke-linecap="round"/>
+  <path d="M165 474C310 496 690 496 835 474L810 511C662 531 338 531 190 511L165 474Z" fill="#07121F"/>
+  <path d="M181 482C325 501 675 501 819 482" stroke="#254261" stroke-opacity="0.58" stroke-width="4"/>
+  <path d="M171 417C310 431 690 431 829 417" stroke="#07111B" stroke-opacity="0.75" stroke-width="4"/>
+</svg>

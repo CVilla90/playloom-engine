@@ -2,6 +2,7 @@ import { defineConfig, type Plugin } from "vite";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BackroomsPublicMatchSocketServer } from "./games/backrooms-breaker-floor/src/multiplayer/server/BackroomsPublicMatchSocketServer";
+import { WanganRaceSocketServer } from "./games/wangan-zero/src/multiplayer/server/WanganRaceSocketServer";
 
 const rootDir = fileURLToPath(new URL(".", import.meta.url));
 
@@ -31,8 +32,33 @@ function backroomsPublicRoomPlugin(): Plugin {
   };
 }
 
+function wanganRaceSessionPlugin(): Plugin {
+  let raceServer: WanganRaceSocketServer | null = null;
+
+  const attach = (httpServer: Parameters<NonNullable<Plugin["configureServer"]>>[0]["httpServer"]): void => {
+    if (!httpServer || raceServer) {
+      return;
+    }
+    raceServer = new WanganRaceSocketServer(httpServer);
+    httpServer.once("close", () => {
+      raceServer?.dispose();
+      raceServer = null;
+    });
+  };
+
+  return {
+    name: "playloom-wangan-race-session",
+    configureServer(server) {
+      attach(server.httpServer);
+    },
+    configurePreviewServer(server) {
+      attach(server.httpServer);
+    }
+  };
+}
+
 export default defineConfig({
-  plugins: [backroomsPublicRoomPlugin()],
+  plugins: [backroomsPublicRoomPlugin(), wanganRaceSessionPlugin()],
   resolve: {
     alias: {
       "@playloom/engine-core": resolve(rootDir, "packages/engine-core/src/index.ts"),

@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="650" viewBox="0 0 1000 650" fill="none">
+  <title>Generic civilian traffic car — rear-dominant slight angle</title>
+  <desc>
+    Original fictional late-1980s compact sedan drawn mostly from the rear, with only a narrow view of its right side.
+  </desc>
+
+  <defs>
+    <linearGradient id="bodyTop" x1="480" y1="132" x2="480" y2="346" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#46638A"/>
+      <stop offset="0.38" stop-color="#2A4267"/>
+      <stop offset="1" stop-color="#172B49"/>
+    </linearGradient>
+    <linearGradient id="bodyRear" x1="478" y1="278" x2="478" y2="522" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#314E76"/>
+      <stop offset="0.46" stop-color="#223B60"/>
+      <stop offset="1" stop-color="#10233D"/>
+    </linearGradient>
+    <linearGradient id="bodySide" x1="791" y1="270" x2="858" y2="480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2E4A70"/>
+      <stop offset="1" stop-color="#10233D"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="482" y1="150" x2="482" y2="289" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111A29"/>
+      <stop offset="0.62" stop-color="#07101D"/>
+      <stop offset="1" stop-color="#03070D"/>
+    </linearGradient>
+    <linearGradient id="lamp" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FF5D58"/>
+      <stop offset="0.36" stop-color="#D9272D"/>
+      <stop offset="1" stop-color="#7E0E1D"/>
+    </linearGradient>
+    <linearGradient id="bumper" x1="480" y1="442" x2="480" y2="536" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#233B5D"/>
+      <stop offset="0.22" stop-color="#142943"/>
+      <stop offset="1" stop-color="#071321"/>
+    </linearGradient>
+    <radialGradient id="lampGlow">
+      <stop stop-color="#FF4C47" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#FF4C47" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Rear wheels are deliberately subdued: from this near-direct rear view,
+       traffic reads through scale and position rather than visible wheel spin. -->
+  <path d="M190 455C176 463 170 489 174 526C178 558 192 576 215 578C239 580 254 560 257 523C260 489 251 464 236 455H190Z" fill="#05070A"/>
+  <path d="M204 466C194 477 191 510 196 539C199 557 207 565 217 565C228 565 236 554 239 532C243 501 237 476 228 466H204Z" fill="#151A22"/>
+  <path d="M719 454C707 465 702 490 705 525C708 558 721 576 742 578C765 580 779 559 782 524C785 489 778 465 764 454H719Z" fill="#05070A"/>
+  <path d="M730 465C721 478 719 508 723 537C726 555 733 565 743 565C753 565 761 553 764 531C767 502 762 477 754 465H730Z" fill="#151A22"/>
+
+  <!-- Rear cabin and roof. -->
+  <path d="M242 132C310 111 650 112 710 132C745 144 776 188 793 274L176 274C194 191 216 145 242 132Z" fill="url(#bodyTop)" stroke="#0A1422" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M269 151C334 136 629 136 686 151C714 160 738 197 751 260H215C228 198 245 160 269 151Z" fill="url(#glass)" stroke="#7891B3" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M229 245H741" stroke="#243D61" stroke-width="4"/>
+  <path d="M280 161C337 149 622 149 678 161" stroke="#6D8BB7" stroke-opacity="0.34" stroke-width="4" stroke-linecap="round"/>
+  <g stroke="#6F2D2E" stroke-opacity="0.32" stroke-width="2">
+    <path d="M233 238H735"/>
+    <path d="M236 224H732"/>
+    <path d="M240 210H728"/>
+  </g>
+
+  <!-- Dominant rear face. -->
+  <path d="M162 271C184 257 209 250 241 250H737C766 250 790 258 807 276L819 325L813 456C810 485 787 506 758 511C627 529 323 529 198 511C168 506 146 484 143 456L137 329L162 271Z" fill="url(#bodyRear)" stroke="#091522" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M178 280C286 265 676 265 773 280L789 326H160L178 280Z" fill="#2A466D"/>
+  <path d="M179 282C306 272 652 272 773 283" stroke="#6D8CB5" stroke-opacity="0.55" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Narrow side plane: around ten percent of the visible body width. -->
+  <path d="M807 276L845 296C855 302 861 312 863 325L875 433C878 452 869 469 853 479L806 505C811 491 814 475 813 456L819 325L807 276Z" fill="url(#bodySide)" stroke="#091522" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M824 305L846 316L856 407L820 421L824 305Z" fill="#203A5D"/>
+  <path d="M827 313L845 322" stroke="#7190B7" stroke-opacity="0.43" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Tail-lamp glows stay close to the body so the cutout remains clean. -->
+  <ellipse cx="238" cy="366" rx="113" ry="77" fill="url(#lampGlow)"/>
+  <ellipse cx="699" cy="366" rx="104" ry="77" fill="url(#lampGlow)"/>
+
+  <!-- Rear lamps. -->
+  <path d="M160 326H315V405H151L150 345C150 336 153 330 160 326Z" fill="url(#lamp)" stroke="#070B11" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M649 326H796L802 345L798 405H649V326Z" fill="url(#lamp)" stroke="#070B11" stroke-width="7" stroke-linejoin="round"/>
+  <g stroke="#FF7870" stroke-opacity="0.58" stroke-width="3">
+    <path d="M173 340H294"/>
+    <path d="M173 356H294"/>
+    <path d="M173 372H294"/>
+    <path d="M670 340H780"/>
+    <path d="M670 356H783"/>
+    <path d="M670 372H782"/>
+  </g>
+  <path d="M253 329V402M690 329V402" stroke="#5B0A14" stroke-width="5"/>
+  <path d="M273 379H309V402H273V379ZM656 379H691V402H656V379Z" fill="#E9D6B1" fill-opacity="0.82"/>
+
+  <!-- Center trim and intentionally blank registration recess. -->
+  <path d="M315 326H649V406H315V326Z" fill="#0A1019"/>
+  <path d="M326 342H638M326 357H638M326 372H638M326 387H638" stroke="#1E2A3A" stroke-width="5"/>
+  <rect x="419" y="356" width="126" height="44" rx="5" fill="#111923" stroke="#3B4C60" stroke-width="3"/>
+  <rect x="432" y="367" width="100" height="22" rx="3" fill="#080D14"/>
+
+  <!-- Bumper and lower valance. -->
+  <path d="M145 410C298 423 671 423 812 410L811 469C773 489 217 490 146 469L145 410Z" fill="url(#bumper)" stroke="#07111D" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M156 429C301 441 668 441 801 429" stroke="#7690AE" stroke-opacity="0.48" stroke-width="5" stroke-linecap="round"/>
+  <path d="M161 474C300 495 663 495 793 474L776 511C651 530 318 530 188 511L161 474Z" fill="#07121F"/>
+  <path d="M177 481C319 500 645 500 778 482" stroke="#254261" stroke-opacity="0.58" stroke-width="4"/>
+
+  <!-- Body creases and small original details. -->
+  <path d="M174 305C307 293 663 293 785 305" stroke="#54739A" stroke-opacity="0.42" stroke-width="3"/>
+  <path d="M186 417C311 431 660 431 787 418" stroke="#07111B" stroke-opacity="0.75" stroke-width="4"/>
+  <circle cx="760" cy="291" r="7" fill="#101B2A" stroke="#6884A5" stroke-width="2"/>
+  <path d="M832 409L858 398L861 426L834 438L832 409Z" fill="#A9232C" stroke="#070B11" stroke-width="4"/>
+</svg>

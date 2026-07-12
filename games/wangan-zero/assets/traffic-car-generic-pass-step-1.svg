@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="650" viewBox="0 0 1000 650" fill="none">
+  <title>Generic civilian traffic car — passing view step one</title>
+  <desc>
+    Mirrorable first side-step view derived from the accepted direct-rear sedan: rear dominant, slight right side,
+    both right-side wheels visible, and only the tip of the front revealed.
+  </desc>
+
+  <defs>
+    <linearGradient id="roofPaint" x1="485" y1="118" x2="485" y2="326" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4A6992"/>
+      <stop offset="0.42" stop-color="#2D476E"/>
+      <stop offset="1" stop-color="#172C49"/>
+    </linearGradient>
+    <linearGradient id="rearPaint" x1="386" y1="268" x2="386" y2="530" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#36547E"/>
+      <stop offset="0.47" stop-color="#233D63"/>
+      <stop offset="1" stop-color="#10243E"/>
+    </linearGradient>
+    <linearGradient id="sidePaint" x1="653" y1="268" x2="798" y2="519" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#35537C"/>
+      <stop offset="0.5" stop-color="#223C61"/>
+      <stop offset="1" stop-color="#0E2139"/>
+    </linearGradient>
+    <linearGradient id="rearGlass" x1="410" y1="145" x2="410" y2="275" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#121D2D"/>
+      <stop offset="0.62" stop-color="#07111E"/>
+      <stop offset="1" stop-color="#03070D"/>
+    </linearGradient>
+    <linearGradient id="sideGlass" x1="676" y1="158" x2="701" y2="266" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#17273B"/>
+      <stop offset="0.72" stop-color="#08111E"/>
+      <stop offset="1" stop-color="#03070D"/>
+    </linearGradient>
+    <linearGradient id="lamp" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FF625D"/>
+      <stop offset="0.36" stop-color="#D9272D"/>
+      <stop offset="1" stop-color="#7E0E1D"/>
+    </linearGradient>
+    <linearGradient id="bumper" x1="440" y1="414" x2="440" y2="534" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#294466"/>
+      <stop offset="0.24" stop-color="#162C47"/>
+      <stop offset="1" stop-color="#071321"/>
+    </linearGradient>
+    <radialGradient id="lampGlow">
+      <stop stop-color="#FF4C47" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#FF4C47" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="wheelFace">
+      <stop stop-color="#919AA5"/>
+      <stop offset="0.3" stop-color="#5D6671"/>
+      <stop offset="0.35" stop-color="#202630"/>
+      <stop offset="0.74" stop-color="#11161D"/>
+      <stop offset="1" stop-color="#05070A"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Far rear tire remains a narrow rear-view silhouette. -->
+  <path d="M151 455C138 469 134 495 138 529C142 559 155 576 176 578C198 579 211 559 214 525C217 493 210 469 196 456L151 455Z" fill="#05070A"/>
+  <path d="M164 468C155 481 153 510 157 538C160 555 167 564 176 564C186 564 193 553 196 532C199 503 194 480 186 468H164Z" fill="#151A22"/>
+
+  <!-- Both wheels on the revealed side. The rear wheel is nearer and larger. -->
+  <ellipse cx="648" cy="511" rx="52" ry="69" fill="#05070A"/>
+  <ellipse cx="648" cy="511" rx="38" ry="53" fill="url(#wheelFace)" stroke="#020407" stroke-width="5"/>
+  <ellipse cx="648" cy="511" rx="17" ry="24" fill="#727B86" stroke="#171C23" stroke-width="4"/>
+  <circle cx="648" cy="511" r="7" fill="#11161D"/>
+  <g fill="#202730">
+    <ellipse cx="648" cy="491" rx="4" ry="8"/>
+    <ellipse cx="648" cy="531" rx="4" ry="8"/>
+    <ellipse cx="633" cy="511" rx="6" ry="4"/>
+    <ellipse cx="663" cy="511" rx="6" ry="4"/>
+  </g>
+
+  <ellipse cx="840" cy="492" rx="40" ry="56" fill="#05070A"/>
+  <ellipse cx="840" cy="492" rx="29" ry="42" fill="url(#wheelFace)" stroke="#020407" stroke-width="5"/>
+  <ellipse cx="840" cy="492" rx="13" ry="19" fill="#6D7681" stroke="#171C23" stroke-width="4"/>
+  <circle cx="840" cy="492" r="6" fill="#11161D"/>
+  <g fill="#202730">
+    <ellipse cx="840" cy="477" rx="3" ry="6"/>
+    <ellipse cx="840" cy="507" rx="3" ry="6"/>
+    <ellipse cx="829" cy="492" rx="5" ry="3"/>
+    <ellipse cx="851" cy="492" rx="5" ry="3"/>
+  </g>
+
+  <!-- Unified roof with a frontal rear window and a modest side-window reveal. -->
+  <path d="M224 132C284 111 553 111 616 126L712 145C756 154 786 198 808 274L170 278C187 194 204 145 224 132Z" fill="url(#roofPaint)" stroke="#0A1422" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M252 152C310 136 526 136 575 150C601 158 621 198 634 260L205 262C219 200 234 162 252 152Z" fill="url(#rearGlass)" stroke="#7891B3" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M592 155L690 174C726 181 753 215 770 258L646 259C635 209 617 172 592 155Z" fill="url(#sideGlass)" stroke="#7891B3" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M641 166L652 258" stroke="#263A54" stroke-width="7"/>
+  <path d="M704 182L731 258" stroke="#263A54" stroke-width="7"/>
+  <path d="M265 161C322 148 515 148 565 159" stroke="#6D8BB7" stroke-opacity="0.34" stroke-width="4" stroke-linecap="round"/>
+  <path d="M611 164L687 179" stroke="#6D8BB7" stroke-opacity="0.3" stroke-width="3" stroke-linecap="round"/>
+  <g stroke="#6F2D2E" stroke-opacity="0.3" stroke-width="2">
+    <path d="M221 240H625"/>
+    <path d="M224 226H622"/>
+    <path d="M228 212H617"/>
+  </g>
+
+  <!-- Rear remains the dominant plane. -->
+  <path d="M151 271C170 258 194 251 224 251H606C629 251 648 260 662 278L674 333L670 458C667 486 646 506 620 511C498 529 283 528 184 511C156 506 136 485 133 457L128 354C128 317 135 290 151 271Z" fill="url(#rearPaint)" stroke="#091522" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M160 282C260 268 548 268 635 282L653 326H143L160 282Z" fill="#2C4971"/>
+  <path d="M161 284C271 274 543 274 634 284" stroke="#6D8CB5" stroke-opacity="0.54" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- One-step side plane: enough to establish passing motion without becoming a half-side view. -->
+  <path d="M662 278L798 298C823 302 844 313 860 329L894 364C903 373 908 385 909 398L913 444C915 462 905 478 890 487L846 512L797 473C772 462 739 457 704 461L670 485V458L674 333L662 278Z" fill="url(#sidePaint)" stroke="#091522" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M674 291L796 308C819 312 838 322 851 336L882 369L760 363L678 350L674 291Z" fill="#2B486F"/>
+  <path d="M680 371L879 387" stroke="#5E7CA1" stroke-opacity="0.46" stroke-width="4" stroke-linecap="round"/>
+  <path d="M684 405L884 420" stroke="#10233C" stroke-width="4"/>
+
+  <!-- Side doors and handles preserve the ordinary civilian-sedan character. -->
+  <path d="M728 365L721 456M805 372L799 458" stroke="#10233C" stroke-width="4"/>
+  <path d="M696 382L719 384" stroke="#8294A8" stroke-opacity="0.65" stroke-width="4" stroke-linecap="round"/>
+  <path d="M770 388L792 390" stroke="#8294A8" stroke-opacity="0.62" stroke-width="4" stroke-linecap="round"/>
+  <path d="M673 454C703 436 742 438 770 460M806 458C830 438 860 441 882 462" stroke="#08131F" stroke-width="7"/>
+
+  <!-- Rear lighting remains readable, with the near lamp wrapping slightly around the corner. -->
+  <ellipse cx="218" cy="367" rx="103" ry="75" fill="url(#lampGlow)"/>
+  <ellipse cx="584" cy="367" rx="97" ry="75" fill="url(#lampGlow)"/>
+  <path d="M143 326H280V405H134L133 345C133 336 136 330 143 326Z" fill="url(#lamp)" stroke="#070B11" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M521 326H650L657 344L654 405H521V326Z" fill="url(#lamp)" stroke="#070B11" stroke-width="7" stroke-linejoin="round"/>
+  <g stroke="#FF7870" stroke-opacity="0.58" stroke-width="3">
+    <path d="M156 340H261"/>
+    <path d="M156 356H261"/>
+    <path d="M156 372H261"/>
+    <path d="M540 340H638"/>
+    <path d="M540 356H641"/>
+    <path d="M540 372H640"/>
+  </g>
+  <path d="M230 329V402M557 329V402" stroke="#5B0A14" stroke-width="5"/>
+  <path d="M243 379H274V402H243V379ZM527 379H558V402H527V379Z" fill="#E9D6B1" fill-opacity="0.82"/>
+  <path d="M657 342L679 349V403L654 405L657 342Z" fill="#A91624" stroke="#070B11" stroke-width="4"/>
+
+  <!-- Center rear trim and blank registration recess. -->
+  <path d="M280 326H521V406H280V326Z" fill="#0A1019"/>
+  <path d="M291 342H510M291 357H510M291 372H510M291 387H510" stroke="#1E2A3A" stroke-width="5"/>
+  <rect x="337" y="356" width="126" height="44" rx="5" fill="#111923" stroke="#3B4C60" stroke-width="3"/>
+  <rect x="350" y="367" width="100" height="22" rx="3" fill="#080D14"/>
+
+  <!-- Rear bumper flows into the side sill. -->
+  <path d="M133 410C251 423 548 423 670 410V468C635 490 174 490 134 468L133 410Z" fill="url(#bumper)" stroke="#07111D" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M145 429C263 441 548 441 659 429" stroke="#7690AE" stroke-opacity="0.48" stroke-width="5" stroke-linecap="round"/>
+  <path d="M145 474C260 495 552 496 653 474L631 511C514 530 279 530 168 511L145 474Z" fill="#07121F"/>
+  <path d="M159 482C278 500 535 500 637 482" stroke="#254261" stroke-opacity="0.58" stroke-width="4"/>
+  <path d="M670 424L894 439L890 471L853 492L797 461L704 461L670 480V424Z" fill="#10263F" stroke="#07111D" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M686 439L881 452" stroke="#6E89A7" stroke-opacity="0.42" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Only the front tip is visible at this first step. -->
+  <path d="M860 329L894 364C903 373 908 385 909 398L911 419L883 416L874 372L849 344L860 329Z" fill="#203B5E"/>
+  <path d="M884 367L899 384L902 405L884 402L876 378L884 367Z" fill="#D9C792" stroke="#09111B" stroke-width="4"/>
+  <path d="M910 419L913 444C915 462 905 478 890 487L879 493L879 469L896 449L894 423L910 419Z" fill="#091725"/>
+
+  <!-- Upper body creases. -->
+  <path d="M151 305C256 294 555 294 649 306" stroke="#54739A" stroke-opacity="0.42" stroke-width="3"/>
+  <path d="M149 417C258 431 559 431 660 418" stroke="#07111B" stroke-opacity="0.74" stroke-width="4"/>
+</svg>

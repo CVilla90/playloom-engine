@@ -34,6 +34,7 @@ playloom-engine/
     strata-machina/
     backrooms-breaker-floor/
     black-relay-courier/
+    wangan-zero/
 ```
 
 ## Public Engine Packages
@@ -183,6 +184,8 @@ Example:
   first-person-feel prototype built with 2D canvas techniques
 - `games/black-relay-courier`
   current cockpit-speed prototype
+- `games/wangan-zero`
+  cockpit-first night bay-expressway racing prototype (see `games/wangan-zero/docs/HANDOFF.md`)
 
 ## Read Order For Deeper Context
 If this README is enough, stop here and build.

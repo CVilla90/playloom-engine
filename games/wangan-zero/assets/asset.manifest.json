@@ -1,0 +1,236 @@
+{
+  "gameId": "wangan-zero",
+  "assets": [
+    {
+      "id": "traffic_car_yaw_000",
+      "kind": "image",
+      "path": "traffic-car-frames/traffic-car-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-traffic-car-sprites.mjs"
+    },
+    {
+      "id": "traffic_car_yaw_004",
+      "kind": "image",
+      "path": "traffic-car-frames/traffic-car-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-traffic-car-sprites.mjs"
+    },
+    {
+      "id": "traffic_car_yaw_008",
+      "kind": "image",
+      "path": "traffic-car-frames/traffic-car-yaw-008.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-traffic-car-sprites.mjs"
+    },
+    {
+      "id": "traffic_car_front_yaw_000",
+      "kind": "image",
+      "path": "traffic-car-frames/traffic-car-front-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-traffic-car-sprites.mjs"
+    },
+    {
+      "id": "traffic_car_front_yaw_004",
+      "kind": "image",
+      "path": "traffic-car-frames/traffic-car-front-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-traffic-car-sprites.mjs"
+    },
+    {
+      "id": "shirokage_yaw_000",
+      "kind": "image",
+      "path": "shirokage-car-frames/shirokage-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-shirokage-car-sprites.mjs"
+    },
+    {
+      "id": "shirokage_yaw_004",
+      "kind": "image",
+      "path": "shirokage-car-frames/shirokage-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-shirokage-car-sprites.mjs"
+    },
+    {
+      "id": "shirokage_front_yaw_000",
+      "kind": "image",
+      "path": "shirokage-car-frames/shirokage-front-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-shirokage-car-sprites.mjs"
+    },
+    {
+      "id": "shirokage_front_yaw_004",
+      "kind": "image",
+      "path": "shirokage-car-frames/shirokage-front-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-shirokage-car-sprites.mjs"
+    },
+    {
+      "id": "shirokage_red_yaw_000",
+      "kind": "image",
+      "path": "shirokage-red-car-frames/shirokage-red-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-shirokage-red-car-sprites.mjs"
+    },
+    {
+      "id": "shirokage_red_yaw_004",
+      "kind": "image",
+      "path": "shirokage-red-car-frames/shirokage-red-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-shirokage-red-car-sprites.mjs"
+    },
+    {
+      "id": "shirokage_red_front_yaw_000",
+      "kind": "image",
+      "path": "shirokage-red-car-frames/shirokage-red-front-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-shirokage-red-car-sprites.mjs"
+    },
+    {
+      "id": "shirokage_red_front_yaw_004",
+      "kind": "image",
+      "path": "shirokage-red-car-frames/shirokage-red-front-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-shirokage-red-car-sprites.mjs"
+    },
+    {
+      "id": "hibana_rs_yaw_000",
+      "kind": "image",
+      "path": "hibana-rs-car-frames/hibana-rs-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-hibana-rs-car-sprites.mjs"
+    },
+    {
+      "id": "hibana_rs_yaw_004",
+      "kind": "image",
+      "path": "hibana-rs-car-frames/hibana-rs-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-hibana-rs-car-sprites.mjs"
+    },
+    {
+      "id": "hibana_rs_front_yaw_000",
+      "kind": "image",
+      "path": "hibana-rs-car-frames/hibana-rs-front-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-hibana-rs-car-sprites.mjs"
+    },
+    {
+      "id": "hibana_rs_front_yaw_004",
+      "kind": "image",
+      "path": "hibana-rs-car-frames/hibana-rs-front-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-hibana-rs-car-sprites.mjs"
+    },
+    {
+      "id": "aonami_gt_yaw_000",
+      "kind": "image",
+      "path": "aonami-gt-car-frames/aonami-gt-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-aonami-gt-car-sprites.mjs"
+    },
+    {
+      "id": "aonami_gt_yaw_004",
+      "kind": "image",
+      "path": "aonami-gt-car-frames/aonami-gt-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-aonami-gt-car-sprites.mjs"
+    },
+    {
+      "id": "aonami_gt_front_yaw_000",
+      "kind": "image",
+      "path": "aonami-gt-car-frames/aonami-gt-front-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-aonami-gt-car-sprites.mjs"
+    },
+    {
+      "id": "aonami_gt_front_yaw_004",
+      "kind": "image",
+      "path": "aonami-gt-car-frames/aonami-gt-front-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-aonami-gt-car-sprites.mjs"
+    },
+    {
+      "id": "kagero_vx_yaw_000",
+      "kind": "image",
+      "path": "kagero-vx-car-frames/kagero-vx-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-kagero-vx-car-sprites.mjs"
+    },
+    {
+      "id": "kagero_vx_yaw_004",
+      "kind": "image",
+      "path": "kagero-vx-car-frames/kagero-vx-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-kagero-vx-car-sprites.mjs"
+    },
+    {
+      "id": "kagero_vx_front_yaw_000",
+      "kind": "image",
+      "path": "kagero-vx-car-frames/kagero-vx-front-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-kagero-vx-car-sprites.mjs"
+    },
+    {
+      "id": "kagero_vx_front_yaw_004",
+      "kind": "image",
+      "path": "kagero-vx-car-frames/kagero-vx-front-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-kagero-vx-car-sprites.mjs"
+    },
+    {
+      "id": "reimei_xr_yaw_000",
+      "kind": "image",
+      "path": "reimei-xr-car-frames/reimei-xr-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-reimei-xr-car-sprites.mjs"
+    },
+    {
+      "id": "reimei_xr_yaw_004",
+      "kind": "image",
+      "path": "reimei-xr-car-frames/reimei-xr-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-reimei-xr-car-sprites.mjs"
+    },
+    {
+      "id": "reimei_xr_front_yaw_000",
+      "kind": "image",
+      "path": "reimei-xr-car-frames/reimei-xr-front-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-reimei-xr-car-sprites.mjs"
+    },
+    {
+      "id": "reimei_xr_front_yaw_004",
+      "kind": "image",
+      "path": "reimei-xr-car-frames/reimei-xr-front-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-reimei-xr-car-sprites.mjs"
+    },
+    {
+      "id": "traffic_truck_yaw_000",
+      "kind": "image",
+      "path": "traffic-truck-frames/traffic-truck-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-traffic-truck-sprites.mjs"
+    },
+    {
+      "id": "traffic_truck_yaw_004",
+      "kind": "image",
+      "path": "traffic-truck-frames/traffic-truck-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-traffic-truck-sprites.mjs"
+    },
+    {
+      "id": "traffic_truck_front_yaw_000",
+      "kind": "image",
+      "path": "traffic-truck-frames/traffic-truck-front-yaw-000.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-traffic-truck-sprites.mjs"
+    },
+    {
+      "id": "traffic_truck_front_yaw_004",
+      "kind": "image",
+      "path": "traffic-truck-frames/traffic-truck-front-yaw-004.png",
+      "license": "original-generated-in-repo",
+      "source": "games/wangan-zero/tools/generate-traffic-truck-sprites.mjs"
+    }
+  ]
+}

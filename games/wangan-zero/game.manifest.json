@@ -1,0 +1,17 @@
+{
+  "id": "wangan-zero",
+  "name": "Wangan Zero",
+  "entry": "src/main.ts",
+  "serverEntry": "src/multiplayer/server/server-entry.ts",
+  "render": {
+    "width": 1280,
+    "height": 720,
+    "targetFps": 60
+  },
+  "features": ["multiplayer", "server-authoritative", "touch", "procedural-audio", "procedural-music", "manual-transmission"],
+  "assetsManifest": "assets/asset.manifest.json",
+  "save": {
+    "key": "wangan-zero.save.v1",
+    "version": 1
+  }
+}
